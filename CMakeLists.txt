@@ -28,7 +28,10 @@ set(HEADER_FILES
     include/GUI.h
     include/Renderer.h
     include/DebugRenderer.h
+    include/PixelRenderer.h
+    include/Sphere.h
     include/Parameters.h
+    include/Camera.h
 )
 
 set(SOURCE_FILES
@@ -42,6 +45,9 @@ set(SOURCE_FILES
     source/GUI.cpp
     source/Renderer.cpp
     source/DebugRenderer.cpp
+    source/PixelRenderer.cpp
+    source/Sphere.cpp
+    source/Camera.cpp
 )
 
 # Add header with path to resources and add header to include directory

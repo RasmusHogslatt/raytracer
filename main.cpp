@@ -5,6 +5,6 @@
 int main()
 {
 	App app;
-	app.run();
+	app.loop();
 	return 0;
 }

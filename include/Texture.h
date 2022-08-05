@@ -4,18 +4,16 @@
 #include <glfw/glfw3.h>
 #include <imgui.h>
 
-class Texture
-{
+class Texture {
 public:
 	Texture();
 	~Texture();
-	void setClearColor(const ImVec4& color = ImVec4(1, 0, 0, 1));
 
-	void setPixelColor(int x, int y, ImVec4 color);
+	void setPixelColor(size_t x, size_t y, ImVec4 color);
 
-	void clearTextureColor();
+	void clearTextureColor(ImVec4 color = ImVec4(0,0,0,1));
 
-	void createTexture(const ImVec4& color, uint32_t width = 768, uint32_t height = 480);
+	void createTexture(size_t width = 768, size_t height = 480);
 
 	void updateTextureData();
 
@@ -25,7 +23,7 @@ public:
 
 	GLuint ID_;
 	unsigned char* data_;
-	ImVec4 clearColor_;
+
 	ImVec2 getDimensions() const;
 	bool isColorSet = false;
 private:

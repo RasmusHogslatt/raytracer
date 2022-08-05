@@ -13,6 +13,7 @@
 #include <iostream>
 #include <Parameters.h>
 #include <GUI.h>
+#include <DebugRenderer.h>
 
 static void glfw_error_callback(int error, const char* description);
 
@@ -23,11 +24,12 @@ public:
 
 	~App();
 
+	// Updates IMGUI window size. Called each frame
 	void updateWindowSizeAndPosition();
 
-	void run();
-	void startUp();
-	void renderUI();
+	void initGLFWandIMGUI();
+	void loop();
+	void callGUI();
 
 	void close();
 
@@ -35,9 +37,7 @@ public:
 
 private:
 	Parameters params;
-	
 	int x = 0;
 	ImVec2 pos = ImVec2(0,0);
 	std::vector<ImVec2> positions; // Construct objects from positions
-	friend class GUI;
 };

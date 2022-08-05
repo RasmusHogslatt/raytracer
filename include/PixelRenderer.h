@@ -6,9 +6,9 @@
 #include <Texture.h>
 #include <Parameters.h>
 
-class DebugRenderer : public Renderer {
+class PixelRenderer : public Renderer {
 public:
-	DebugRenderer(Parameters& params);
+	PixelRenderer(Parameters& params);
 	
 	void Render();
 	void RenderPixel();
