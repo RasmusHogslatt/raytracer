@@ -10,7 +10,15 @@ void DebugRenderer::Render() {
 
 	for (int y = 0; y < height; ++y) {
 		for (int x = 0; x < width; ++x) {
-			p.renderTexture_.setPixelColor(x, y, ImVec4((float)x / width - 1, (float)y / width - 1, 0, 1));
+
+
+			glm::vec3 c = p.camera.generateRay(x, y);
+			if (c.x < 0.5) {
+				p.renderTexture_.setPixelColor(x, y, ImVec4(c.r, c.g, c.b, 1));
+			}
+			else {
+				p.renderTexture_.setPixelColor(x, y, ImVec4(0, 0, 0, 0));
+			}
 		}
 	}
 

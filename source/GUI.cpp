@@ -7,7 +7,18 @@
 #include <Sphere.h>
 #include <cmath>
 
-GUI::GUI(Parameters& appParameters) : params{ appParameters }, renderTexturePos_{630, 50} {
+glm::vec4 ImVec4ToGLM(const ImVec4& v)
+{
+	return glm::vec4(v.x, v.y, v.z, v.w);
+}
+
+ImVec4 GLMToImVec4(const glm::vec4& v)
+{
+	return ImVec4(v.x, v.y, v.z, v.w);
+}
+
+GUI::GUI(Parameters& appParameters) : params{ appParameters }, renderTexturePos_{ 624, 30 } {
+	viewportPos_ = ImVec2(renderTexturePos_.x, renderTexturePos_.y + params.renderTexture_.getHeight() + 10);
 	if (ImGui::Begin("MainWindow", 0, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)) {
 		menu();
 		controlPanel();
@@ -36,17 +47,32 @@ void GUI::controlPanel() {
 	ImGui::EndChild();
 }
 
-void GUI::camerasettings() {
-	ImGui::SliderFloat3("Camera position", params.cameraPos_, -10, 10);
-	ImGui::SliderFloat3("Camera target", params.cameraTarget_, -10, 10);
-	ImGui::SliderFloat("Field of view", &params.fov_, 20, 150);
+void GUI::sceneconstruction() {
+	ImGui::SliderFloat3("Actor position", &params.actorPos_.x, -10, 10);
+	ImGui::SliderFloat("Radius", &params.radius_, 0, 50);
+	ImGui::ColorPicker4("Color", &params.material_.color_.x);
+	ImGui::Checkbox("Show viewport actor", &params.showViewportActor);
+	if (ImGui::Button("Add actor")) {
+		// To scene
+		params.scene_.push_back(std::make_shared<Sphere>(Sphere()));
+
+		// To viewport
+		dummyActor.position = ImVec2(params.actorPos_.x, params.actorPos_.y);
+		dummyActor.z = params.actorPos_.z;
+		dummyActor.radius = params.radius_;
+		dummyActor.color = GLMToImVec4(params.material_.color_);
+		params.viewportActors.push_back(dummyActor);
+	}
 }
 
-void GUI::sceneconstruction() {
-	ImGui::SliderFloat3("Actor position", params.actorPos_, -10, 10);
-	if (ImGui::Button("Add actor")) {
-		params.scene_.push_back(std::make_shared<Sphere>(Sphere()));
-	std::cout << "Currently " << params.scene_.size() << " spheres added.\n";
+void GUI::camerasettings() {
+	bool changed = false;
+	changed = ImGui::SliderFloat3("Camera position", &params.camera.position.x, -10, 10);
+	changed = ImGui::SliderFloat("FOV", &params.camera.fov, 10, 150);
+	changed = ImGui::SliderFloat("Yaw", &params.camera.yaw, 0, 360);
+	changed = ImGui::SliderFloat("Pitch", &params.camera.pitch, 0, 360);
+	if (changed) {
+		params.camera.updateVectors();
 	}
 }
 
@@ -81,7 +107,7 @@ void GUI::viewportPanel() {
 }
 
 void GUI::renderport() {
-	
+
 	if (params.renderStart && !params.pauseRenderer_ && params.renderOnePixel_) {
 		params.renderers_[params.activeRenderer_]->RenderPixel();
 		if (params.currentx * params.currenty < params.textureSize) {
@@ -106,10 +132,68 @@ void GUI::renderport() {
 	ImGui::GetWindowDrawList()->AddImage((void*)(intptr_t)params.renderTexture_.ID_, topleft, bottomright);
 	params.renderTexture_.updateTextureData();
 }
-
+
+
 void GUI::glviewport()
 {
-	ImVec2 renderportdims = params.renderTexture_.getDimensions();
-	ImGui::GetWindowDrawList()->AddRect(ImVec2(renderTexturePos_.x, 800), ImVec2(renderTexturePos_.x + renderportdims.y, 1000), ImGui::ColorConvertFloat4ToU32(ImVec4(1, 0, 0, 1)));
+	// Viewport dimensions
+	ImVec2 dims = ImVec2(300, 300);
+	int scale = 15;
+	int margin = 10;
+	float cameraRadius = 5.0;
+	ImVec2 secondWindowPos = ImVec2(viewportPos_.x + dims.x + margin, viewportPos_.y);
+	ImVec2 thirdWindowPos = ImVec2(secondWindowPos.x + dims.x + margin, secondWindowPos.y);
+	ImVec2 centerOfViewport1 = ImVec2(viewportPos_.x + dims.x / 2, viewportPos_.y + dims.y / 2);
+	ImVec2 centerOfViewport2 = ImVec2(secondWindowPos.x + dims.x / 2, secondWindowPos.y + dims.y / 2);
+	ImVec2 centerOfViewport3 = ImVec2(thirdWindowPos.x + dims.x / 2, thirdWindowPos.y + dims.y / 2);
+	ImU32 textColor = ImGui::ColorConvertFloat4ToU32(ImVec4(1, 1, 1, 1));
+	ImU32 borderColor = ImGui::ColorConvertFloat4ToU32(ImVec4(1, 1, 1, 1));
+	ImU32 dummyColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.1, 0.3, 1, 1.0));
+
+	// 1st viewport
+	auto drawList = ImGui::GetWindowDrawList();
+	drawList->AddText(viewportPos_, textColor, "XZ-plane");
+	drawList->AddRect(viewportPos_, ImVec2(viewportPos_.x + dims.x, viewportPos_.y + dims.y), borderColor);
+
+	// Camera
+	drawList->AddCircleFilled(ImVec2(centerOfViewport1.x + params.camera.position.x * scale, centerOfViewport1.y + params.camera.position.z * scale), cameraRadius, textColor);
+	drawList->AddLine(ImVec2(centerOfViewport1.x + params.camera.position.x * scale, centerOfViewport1.y + params.camera.position.z * scale), ImVec2(centerOfViewport1.x + params.camera.front.x * scale, centerOfViewport1.y + params.camera.front.z * scale), textColor);
+
+	if (params.showViewportActor) {
+		drawList->AddCircleFilled(ImVec2(centerOfViewport1.x + params.actorPos_.x * scale, centerOfViewport1.y + params.actorPos_.z * scale), params.radius_ * scale, dummyColor);
+	}
+	for (int i = 0; i < params.viewportActors.size(); ++i) {
+		drawList->AddCircleFilled(ImVec2(centerOfViewport1.x + params.viewportActors[i].position.x * scale, centerOfViewport1.y + params.viewportActors[i].z * scale), params.viewportActors[i].radius * scale, ImGui::ColorConvertFloat4ToU32(params.viewportActors[i].color));
+	}
+
+	// 2nd viewport
+	drawList->AddText(secondWindowPos, textColor, "ZY-plane");
+	drawList->AddRect(secondWindowPos, ImVec2(secondWindowPos.x + dims.x, secondWindowPos.y + dims.y), borderColor);
+
+	// Camera
+	drawList->AddCircleFilled(ImVec2(centerOfViewport2.x - params.camera.position.z * scale, centerOfViewport2.y - params.camera.position.y * scale), cameraRadius, textColor);
+	drawList->AddLine(ImVec2(centerOfViewport2.x - params.camera.position.z * scale, centerOfViewport2.y - params.camera.position.y * scale), ImVec2(centerOfViewport2.x - params.camera.front.z * scale, centerOfViewport2.y - params.camera.front.y * scale), textColor);
+
+	if (params.showViewportActor) {
+		drawList->AddCircleFilled(ImVec2(centerOfViewport2.x - params.actorPos_.z * scale, centerOfViewport2.y - params.actorPos_.y * scale), params.radius_ * scale, dummyColor);
+	}
+	for (int i = 0; i < params.viewportActors.size(); ++i) {
+		drawList->AddCircleFilled(ImVec2(centerOfViewport2.x - params.viewportActors[i].z * scale, centerOfViewport2.y - params.viewportActors[i].position.y * scale), params.viewportActors[i].radius * scale, ImGui::ColorConvertFloat4ToU32(params.viewportActors[i].color));
+	}
+
+	// 3rd viewport
+	drawList->AddText(thirdWindowPos, textColor, "XY-plane");
+	drawList->AddRect(thirdWindowPos, ImVec2(thirdWindowPos.x + dims.x, thirdWindowPos.y + dims.y), borderColor);
+
+	// Camera
+	drawList->AddCircleFilled(ImVec2(centerOfViewport3.x + params.camera.position.x * scale, centerOfViewport3.y - params.camera.position.y * scale), cameraRadius, textColor);
+	drawList->AddLine(ImVec2(centerOfViewport3.x + params.camera.position.x * scale, centerOfViewport3.y - params.camera.position.y * scale), ImVec2(centerOfViewport3.x + params.camera.front.x * scale, centerOfViewport3.y - params.camera.front.y * scale), textColor);
+
+	if (params.showViewportActor) {
+		drawList->AddCircleFilled(ImVec2(centerOfViewport3.x + params.actorPos_.x * scale, centerOfViewport3.y - params.actorPos_.y * scale), params.radius_ * scale, dummyColor);
+	}
+	for (int i = 0; i < params.viewportActors.size(); ++i) {
+		drawList->AddCircleFilled(ImVec2(centerOfViewport3.x + params.viewportActors[i].position.x * scale, centerOfViewport3.y - params.viewportActors[i].position.y * scale), params.viewportActors[i].radius * scale, ImGui::ColorConvertFloat4ToU32(params.viewportActors[i].color));
+	}
 }
 

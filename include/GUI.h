@@ -17,4 +17,6 @@ public:
 private:
 	Parameters& params;
 	ImVec2 renderTexturePos_;
+	ImVec2 viewportPos_;
+	ViewportActor dummyActor;
 };
