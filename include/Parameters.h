@@ -56,4 +56,5 @@ struct Parameters {
 	size_t currenty = 0;
 	size_t textureSize = 768 * 480;
 	std::vector<ViewportActor> viewportActors;
+	int sampleMode = 0;
 };

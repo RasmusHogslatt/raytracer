@@ -13,6 +13,7 @@ public:
 	void Render();
 	void RenderPixel();
 	void setBackgroundColor(ImVec4 color = ImVec4(0.5, 0.5, 0.5, 1.0));
+	glm::vec2 getSamplePosition(int x, int y, int currentSample);
 private:
 	Parameters& p;
 };
