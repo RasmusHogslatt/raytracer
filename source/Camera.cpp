@@ -12,7 +12,7 @@ Camera::Camera(glm::vec3 position, glm::vec3 front, glm::vec2 resolution, float 
 glm::vec3 Camera::generateRay(float x, float y)
 {
 
-	glm::vec3 imagePoint = x * right + y * up + position + direction;
+	glm::vec3 imagePoint = x * right - y * up + position + direction;
 	glm::vec3 rayDirection = glm::normalize(imagePoint - position);
 	return rayDirection;
 }

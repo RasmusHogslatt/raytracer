@@ -7,16 +7,24 @@ DebugRenderer::DebugRenderer(Parameters& params) : p{ params } {}
 void DebugRenderer::Render() {
 	int width = p.renderTexture_.getWidth();
 	int height = p.renderTexture_.getHeight();
-	glm::vec3 color = glm::vec3(0);
+	glm::vec4 color = glm::vec4(0);
 	glm::vec2 xyPos = glm::vec2(0);
+	glm::vec3 ray;
 	for (int y = 0; y < height; ++y) {
 		for (int x = 0; x < width; ++x) {
 			for (int currentSample = 0; currentSample < p.samples_; ++currentSample) {
 				xyPos = getSamplePosition(x, y, currentSample);
-				color = p.camera.generateRay(xyPos.x, xyPos.y);
+				ray = p.camera.generateRay(xyPos.x, xyPos.y);
+				for (int i = 0; i < p.scene_.size(); ++i) {
+					if (p.scene_[i]->intersect(p.camera.position, ray)) {
+						color = glm::vec4(1, 0, 0, 1);
+					}
+					else {
+						color = glm::vec4(0, 1, 0, 1);
+					}
+				}
 			}
-
-			p.renderTexture_.setPixelColor(x, y, ImVec4(color.r, color.g, color.b, 1));
+			p.renderTexture_.setPixelColor(x, y, ImVec4(color.r, color.g, color.b, color.a));
 		}
 	}
 
@@ -24,8 +32,23 @@ void DebugRenderer::Render() {
 }
 
 void DebugRenderer::RenderPixel() {
-	p.renderTexture_.setPixelColor(p.currentx, p.currenty, ImVec4(1, 1, 1, 1));
+	glm::vec2 xyPos;
+	glm::vec3 ray;
+	glm::vec4 color;
+	for (int currentSample = 0; currentSample < p.samples_; ++currentSample) {
+		xyPos = getSamplePosition(p.currentx, p.currenty, currentSample);
+		ray = p.camera.generateRay(xyPos.x, xyPos.y);
+		for (int i = 0; i < p.scene_.size(); ++i) {
+			if (p.scene_[i]->intersect(p.camera.position, ray)) {
+				color = glm::vec4(1, 0, 0, 1);
+			}
+			else {
+				color = glm::vec4(0, 1, 0, 1);
+			}
+		}
+	}
 
+	p.renderTexture_.setPixelColor(p.currentx, p.currenty, ImVec4(color.r, color.g, color.b, color.a));
 	p.renderTexture_.updateTextureData();
 }
 
@@ -52,8 +75,8 @@ glm::vec2 DebugRenderer::getSamplePosition(int x, int y, int currentSample)
 	// Random position within pixel
 	else if (p.sampleMode == 1) {
 		float r = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-		pos.x += r/width;
-		pos.y += r/height;
+		pos.x += r / width;
+		pos.y += r / height;
 	}
 	return pos;
 }
