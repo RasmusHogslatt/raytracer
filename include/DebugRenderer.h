@@ -5,6 +5,7 @@
 #include <vector>
 #include <Texture.h>
 #include <Parameters.h>
+#include <Parameters.h>
 
 class DebugRenderer : public Renderer {
 public:

@@ -6,12 +6,12 @@
 #include <Actor.h>
 #include <vector>
 #include <memory>
-#include <Camera.h>
+#include <MyCamera.h>
 
 struct ViewportActor {
 	ImVec2 position = ImVec2(0,0);
 	float z = 0;
-	float radius;
+	float radius = 0;
 	ImVec4 color = ImVec4(0.5,0.5,0.5,1);
 };
 
@@ -36,7 +36,7 @@ struct Parameters {
 
 	// Scene
 	glm::vec3 actorPos_ = glm::vec3(0);
-	Material material_ = Material();
+	MyMaterial material_ = MyMaterial();
 	float radius_ = 1.0;
 
 	std::vector <std::shared_ptr<Renderer>> renderers_;
@@ -44,7 +44,8 @@ struct Parameters {
 	bool showViewportActor;
 
 	// Camera
-	Camera camera = Camera();
+	MyCamera camera = MyCamera();
+	
 
 	// Renderer
 	int activeRenderer_ = 0;

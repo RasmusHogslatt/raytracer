@@ -12,7 +12,7 @@ Texture::~Texture() {
 }
 
 void Texture::setPixelColor(size_t x, size_t y, ImVec4 color) {
-	int pos = y * width_ + x;
+	size_t pos = y * width_ + x;
 	pos <<= 2;
 	data_[pos] = (unsigned char)(color.x * 255);
 	data_[pos + 1] = (unsigned char)(color.y * 255);
@@ -51,8 +51,8 @@ void Texture::createTexture(size_t width, size_t height) {
 	glTexImage2D(GL_TEXTURE_2D,
 		0,
 		format_,
-		width_,
-		height_,
+		static_cast<GLsizei>(width_),
+		static_cast<GLsizei>(height_),
 		0,
 		format_,
 		GL_UNSIGNED_BYTE,
@@ -67,8 +67,8 @@ void Texture::updateTextureData() {
 	glTexImage2D(GL_TEXTURE_2D,
 		0,
 		format_,
-		width_,
-		height_,
+		static_cast<GLsizei>(width_),
+		static_cast<GLsizei>(height_),
 		0,
 		format_,
 		GL_UNSIGNED_BYTE,
@@ -77,7 +77,7 @@ void Texture::updateTextureData() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-uint32_t Texture::getWidth() const {
+size_t Texture::getWidth() const {
 	return width_;
 }
 
@@ -85,7 +85,7 @@ ImVec2 Texture::getDimensions() const {
 	return ImVec2(static_cast<float>(width_), static_cast<float>(height_));
 }
 
-uint32_t Texture::getHeight() const {
+size_t Texture::getHeight() const {
 	return height_;
 }
 

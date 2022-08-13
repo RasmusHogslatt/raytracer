@@ -17,8 +17,8 @@ public:
 
 	void updateTextureData();
 
-	uint32_t getWidth() const;
-	uint32_t getHeight() const;
+	size_t getWidth() const;
+	size_t getHeight() const;
 	void setData(unsigned char* data);
 
 	GLuint ID_;
@@ -27,7 +27,7 @@ public:
 	ImVec2 getDimensions() const;
 	bool isColorSet = false;
 private:
-	uint32_t width_;
-	uint32_t height_;
+	size_t width_;
+	size_t height_;
 	GLenum format_;
 };

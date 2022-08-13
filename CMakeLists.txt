@@ -23,15 +23,31 @@ set(HEADER_FILES
     include/Actor.h
     include/Texture.h
     include/Object.h
-    include/Material.h
+    include/MyMaterial.h
     include/Window.h
     include/GUI.h
     include/Renderer.h
     include/DebugRenderer.h
     include/PixelRenderer.h
-    include/Sphere.h
+    include/MySphere.h
     include/Parameters.h
-    include/Camera.h
+    include/MyCamera.h
+    include/Scene.h
+    include/Point.h
+    include/Film.h
+    include/Ray.h
+    include/Interaction.h
+    include/Primitive.h
+    include/shapes/Shape.h
+    include/shapes/Sphere.h
+    include/accelerators/Aggregate.h
+    include/cameras/Camera.h
+    include/cameras/PerspectiveCamera.h
+    include/samplers/Sampler.h
+    include/filters/Filter.h
+    include/materials/Material.h
+    include/lights/Light.h
+    include/integrators/Integrator.h
 )
 
 set(SOURCE_FILES
@@ -40,14 +56,30 @@ set(SOURCE_FILES
     source/Actor.cpp
     source/Texture.cpp
     source/Object.cpp
-    source/Material.cpp
+    source/MyMaterial.cpp
     source/Window.cpp
     source/GUI.cpp
+    source/Point.cpp
     source/Renderer.cpp
     source/DebugRenderer.cpp
     source/PixelRenderer.cpp
-    source/Sphere.cpp
-    source/Camera.cpp
+    source/MySphere.cpp
+    source/MyCamera.cpp
+    source/Scene.cpp
+    source/Primitive.cpp
+    source/Film.cpp
+    source/Ray.cpp
+    source/Interaction.cpp
+    source/shapes/Shape.cpp
+    source/shapes/Sphere.cpp
+    source/accelerators/Aggregate.cpp
+    source/cameras/Camera.cpp
+    source/cameras/PerspectiveCamera.cpp
+    source/samplers/Sampler.cpp
+    source/filters/Filter.cpp
+    source/materials/Material.cpp
+    source/lights/Light.cpp
+    source/integrators/Integrator.cpp
 )
 
 # Add header with path to resources and add header to include directory

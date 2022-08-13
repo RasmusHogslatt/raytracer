@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include <iostream>
-#include <Sphere.h>
+#include <MySphere.h>
 #include <cmath>
 
 glm::vec4 ImVec4ToGLM(const ImVec4& v)
@@ -54,7 +54,7 @@ void GUI::sceneconstruction() {
 	ImGui::Checkbox("Show viewport actor", &params.showViewportActor);
 	if (ImGui::Button("Add actor")) {
 		// To scene
-		params.scene_.push_back(std::make_shared<Sphere>(Sphere()));
+		params.scene_.push_back(std::make_shared<MySphere>(MySphere()));
 
 		// To viewport
 		dummyActor.position = ImVec2(params.actorPos_.x, params.actorPos_.y);
@@ -73,6 +73,7 @@ void GUI::camerasettings() {
 	if (!changed) {
 		params.camera.updateVectors();
 	}
+	params.camera.GUIsettings();
 }
 
 void GUI::rendersettings() {
@@ -147,7 +148,7 @@ void GUI::glviewport()
 	ImVec2 centerOfViewport3 = ImVec2(thirdWindowPos.x + dims.x / 2, thirdWindowPos.y + dims.y / 2);
 	ImU32 textColor = ImGui::ColorConvertFloat4ToU32(ImVec4(1, 1, 1, 1));
 	ImU32 borderColor = ImGui::ColorConvertFloat4ToU32(ImVec4(1, 1, 1, 1));
-	ImU32 dummyColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.1, 0.3, 1, 1.0));
+	ImU32 dummyColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.1f, 0.3f, 1.0f, 1.0f));
 
 	// 1st viewport
 	auto drawList = ImGui::GetWindowDrawList();

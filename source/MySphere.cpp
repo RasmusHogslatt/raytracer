@@ -1,9 +1,10 @@
-#include "Sphere.h"
+#pragma once
+#include "MySphere.h"
 
-Sphere::Sphere(float radius) : radius_ { radius } {
+MySphere::MySphere(float radius) : radius_ { radius } {
 }
 
-bool Sphere::intersect(const glm::vec3& rayOrigin, const glm::vec3& rayDirection)
+bool MySphere::intersect(const glm::vec3& rayOrigin, const glm::vec3& rayDirection)
 {
 	glm::vec3 l = position_ - rayOrigin;
 	float tca = glm::dot(l, rayDirection);

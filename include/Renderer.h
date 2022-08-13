@@ -5,7 +5,7 @@
 #include <Object.h>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
-#include <Camera.h>
+#include <MyCamera.h>
 
 class Renderer {
 public:
