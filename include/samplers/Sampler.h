@@ -1,13 +1,10 @@
 #pragma once
 
+#include <Parameters.h>
 #include <glm/glm.hpp>
+#include <MyCamera.h>
 
 class Sampler {
 public:
-	virtual ~Sampler();
-	Sampler(size_t samplesPerPixel);
-	virtual void startPixel(const glm::vec2& pixel);
-	virtual float get1D() = 0;
-	virtual glm::vec2 get2D() = 0;
-	CameraSample getCameraSample()
+	virtual glm::vec2 getSamplePosition(int x, int y, MyCamera& c, int currentSample) = 0;
 };

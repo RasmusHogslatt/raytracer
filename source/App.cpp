@@ -5,6 +5,8 @@
 #include <Renderer.h>
 #include <PixelRenderer.h>
 #include <DebugRenderer.h>
+#include <samplers/CenterSampler.h>
+#include <samplers/Sampler.h>
 
 void App::callGUI() {
 	updateWindowSizeAndPosition();
@@ -29,13 +31,13 @@ App::App(int width, int height) {
 	params.viewportTexture_.createTexture();
 
 	DebugRenderer debugRenderer(params);
-	PixelRenderer pixelRenderer(params);
+
 
 	// Add custom cameras and renderers
 	params.scene.cameras_.push_back(std::make_shared<MyCamera>(MyCamera()));
 	params.renderers_.push_back(std::make_shared<DebugRenderer>(debugRenderer));
-	params.renderers_.push_back(std::make_shared<PixelRenderer>(pixelRenderer));
-	params.renderers_[params.activeRenderer_]->setBackgroundColor();
+	//params.renderers_.push_back(std::make_shared<PixelRenderer>(pixelRenderer));
+	params.samplers_.push_back(std::make_shared<CenterSampler>(CenterSampler()));
 }
 
 App::~App()

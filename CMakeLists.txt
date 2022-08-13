@@ -36,7 +36,6 @@ set(HEADER_FILES
     include/Point.h
     include/Film.h
     include/Ray.h
-    include/Interaction.h
     include/Primitive.h
     include/shapes/Shape.h
     include/shapes/Sphere.h
@@ -44,7 +43,8 @@ set(HEADER_FILES
     include/cameras/Camera.h
     include/cameras/PerspectiveCamera.h
     include/samplers/Sampler.h
-    include/filters/Filter.h
+    include/samplers/CenterSampler.h
+    include/samplers/RandomSampler.h
     include/materials/Material.h
     include/lights/Light.h
     include/integrators/Integrator.h
@@ -69,14 +69,14 @@ set(SOURCE_FILES
     source/Primitive.cpp
     source/Film.cpp
     source/Ray.cpp
-    source/Interaction.cpp
     source/shapes/Shape.cpp
     source/shapes/Sphere.cpp
     source/accelerators/Aggregate.cpp
     source/cameras/Camera.cpp
     source/cameras/PerspectiveCamera.cpp
     source/samplers/Sampler.cpp
-    source/filters/Filter.cpp
+    source/samplers/CenterSampler.cpp
+    source/samplers/RandomSampler.cpp
     source/materials/Material.cpp
     source/lights/Light.cpp
     source/integrators/Integrator.cpp

@@ -48,6 +48,9 @@ void GUI::controlPanel() {
 }
 
 void GUI::sceneconstruction() {
+	ImGui::SliderInt("Active renderer", &params.activeRenderer_, 0, static_cast<int>(params.renderers_.size() - 1));
+	ImGui::SliderInt("Active Camera", &params.activeCamera, 0, static_cast<int>(params.scene.cameras_.size() - 1));
+	ImGui::SliderInt("Active sampler", &params.activeSampler, 0, static_cast<int>(params.samplers_.size() - 1));
 	ImGui::SliderFloat3("Actor position", &params.actorPos_.x, -10, 10);
 	ImGui::SliderFloat("Radius", &params.radius_, 0, 50);
 	ImGui::ColorPicker4("Color", &params.material_.color_.x);
@@ -66,37 +69,15 @@ void GUI::sceneconstruction() {
 }
 
 void GUI::camerasettings() {
-	bool changed = false;
-	changed = ImGui::SliderFloat3("Camera position", &params.scene.cameras_[params.activeCamera]->position.x, -10, 10);
-	changed = ImGui::SliderFloat3("Camera direction", &params.scene.cameras_[params.activeCamera]->direction.x, -1, 1);
-	changed = ImGui::SliderFloat("FOV", &params.scene.cameras_[params.activeCamera]->fov, 10, 150);
-	if (!changed) {
-		params.scene.cameras_[0]->updateVectors();
-	}
 	params.scene.cameras_[params.activeCamera]->GUIsettings();
 }
 
 void GUI::rendersettings() {
 	ImGui::SliderInt("Samples per pixel", &params.samples_, 1, 10);
-	ImGui::SliderInt("Active renderer", &params.activeRenderer_, 0, static_cast<int>(params.renderers_.size() - 1));
-	ImGui::SliderInt("Active Camera", &params.activeCamera, 0, static_cast<int>(params.scene.cameras_.size() - 1));
 	ImGui::SliderInt("Sample mode", &params.sampleMode, 0, 1);
 	if (ImGui::Button("Render")) {
-		params.currentx = 0;
-		params.currenty = 0;
 		params.renderStart = true;
-		params.renderers_[params.activeRenderer_]->setBackgroundColor();
 	}
-
-	ImGui::SameLine();
-	if (ImGui::Checkbox("Render one pixel", &params.renderOnePixel_)) {
-		params.renderStart = false;
-		params.renderers_[params.activeRenderer_]->setBackgroundColor();
-	}
-
-	ImGui::SameLine();
-	if (ImGui::Checkbox("Pause", &params.pauseRenderer_)) {}
-
 }
 
 void GUI::viewportPanel() {
@@ -108,24 +89,8 @@ void GUI::viewportPanel() {
 }
 
 void GUI::renderport() {
-
-	if (params.renderStart && !params.pauseRenderer_ && params.renderOnePixel_) {
-		params.renderers_[params.activeRenderer_]->RenderPixel();
-		if (params.currentx * params.currenty < params.textureSize) {
-			if (params.currentx < params.renderTexture_.getWidth()) {
-				params.currentx++;
-			}
-			else if (params.currentx == params.renderTexture_.getWidth()) {
-				params.currentx = 0;
-				params.currenty++;
-			}
-			else if (params.currentx * params.currenty == params.textureSize) {
-				params.renderStart = false;
-			}
-		}
-	}
-	else if (params.renderStart && !params.renderOnePixel_) {
-		params.renderers_[params.activeRenderer_]->Render();
+	if (params.renderStart) {
+		params.renderers_[params.activeRenderer_]->Render(params.scene);
 		params.renderStart = false;
 	}
 	ImVec2 topleft = renderTexturePos_;

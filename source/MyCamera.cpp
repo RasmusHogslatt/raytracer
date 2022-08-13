@@ -32,6 +32,12 @@ void MyCamera::updateVectors()
 void MyCamera::GUIsettings()
 {
 	ImGui::BeginChild("Settings");
-	ImGui::Text("I am a camera setting!");
+	bool changed = false;
+	changed = ImGui::SliderFloat3("Camera position", &position.x, -10, 10);
+	changed = ImGui::SliderFloat3("Camera direction", &direction.x, -1, 1);
+	changed = ImGui::SliderFloat("FOV", &fov, 10, 150);
+	if (!changed) {
+		updateVectors();
+	}
 	ImGui::EndChild();
 }

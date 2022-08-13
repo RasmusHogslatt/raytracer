@@ -10,6 +10,5 @@
 class Renderer {
 public:
 	virtual void Render() = 0;
-	virtual void RenderPixel() = 0;
 	virtual void setBackgroundColor(ImVec4 color = ImVec4(0.5, 0.5, 0.5, 1.0)) = 0;
 };
