@@ -14,9 +14,9 @@ void DebugRenderer::Render() {
 		for (int x = 0; x < width; ++x) {
 			for (int currentSample = 0; currentSample < p.samples_; ++currentSample) {
 				xyPos = getSamplePosition(x, y, currentSample);
-				ray = p.camera.generateRay(xyPos.x, xyPos.y);
-				for (int i = 0; i < p.scene_.size(); ++i) {
-					if (p.scene_[i]->intersect(p.camera.position, ray)) {
+				ray = p.scene.cameras_[p.activeCamera]->generateRay(xyPos.x, xyPos.y);
+				for (int i = 0; i < p.scene.primitives.size(); ++i) {
+					if (p.scene.primitives[i]->intersect(p.scene.cameras_[p.activeCamera]->position, ray)) {
 						color = glm::vec4(1, 0, 0, 1);
 					}
 					else {
@@ -37,9 +37,9 @@ void DebugRenderer::RenderPixel() {
 	glm::vec4 color;
 	for (int currentSample = 0; currentSample < p.samples_; ++currentSample) {
 		xyPos = getSamplePosition(p.currentx, p.currenty, currentSample);
-		ray = p.camera.generateRay(xyPos.x, xyPos.y);
+		ray = p.scene.cameras_[p.activeCamera]->generateRay(xyPos.x, xyPos.y);
 		for (int i = 0; i < p.scene_.size(); ++i) {
-			if (p.scene_[i]->intersect(p.camera.position, ray)) {
+			if (p.scene_[i]->intersect(p.scene.cameras_[p.activeCamera]->position, ray)) {
 				color = glm::vec4(1, 0, 0, 1);
 			}
 			else {
@@ -60,8 +60,8 @@ glm::vec2 DebugRenderer::getSamplePosition(int x, int y, int currentSample)
 {
 	// Check correct calculations based aspectratio, fov etc. Is a pixel truly 1:1 in size? or w/h and h/w respectively
 	glm::vec2 pos = glm::vec2(0);
-	float width = p.camera.resolution.x;
-	float height = p.camera.resolution.y;
+	float width = p.scene.cameras_[p.activeCamera]->resolution.x;
+	float height = p.scene.cameras_[p.activeCamera]->resolution.y;
 	float aspectRatio = width / height;
 
 	// Center of pixel

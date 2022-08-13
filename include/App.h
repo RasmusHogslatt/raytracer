@@ -33,7 +33,7 @@ public:
 
 	void close();
 
-	void GUI();
+	//void GUI();
 
 private:
 	Parameters params;

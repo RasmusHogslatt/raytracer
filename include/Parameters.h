@@ -7,6 +7,7 @@
 #include <vector>
 #include <memory>
 #include <MyCamera.h>
+#include <Scene.h>
 
 struct ViewportActor {
 	ImVec2 position = ImVec2(0,0);
@@ -39,12 +40,13 @@ struct Parameters {
 	MyMaterial material_ = MyMaterial();
 	float radius_ = 1.0;
 
+	Scene scene;
 	std::vector <std::shared_ptr<Renderer>> renderers_;
 	std::vector <std::shared_ptr<Actor>> scene_;
 	bool showViewportActor;
 
 	// Camera
-	MyCamera camera = MyCamera();
+	int activeCamera = 0;
 	
 
 	// Renderer

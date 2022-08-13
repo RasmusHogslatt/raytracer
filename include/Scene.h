@@ -10,6 +10,6 @@
 #include <Actor.h>
 class Scene {
 public:
-	std::vector<std::shared_ptr<Actor>> aggregate_;
-	std::shared_ptr<MyCamera> cameras_;
+	std::vector<std::shared_ptr<Actor>> primitives;
+	std::vector<std::shared_ptr<MyCamera>> cameras_;
 };
