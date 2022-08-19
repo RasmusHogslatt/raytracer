@@ -1,14 +1,16 @@
 #pragma once
 
 #include <Actor.h>
-#include <MyMaterial.h>
+#include <materials/Material.h>
 
 class Object : public Actor {
 public:
 	Object();
+	Object(const Object& old);
 
-	virtual bool intersect(const glm::vec3& rayOrigin, const glm::vec3& rayDirection) = 0;
-protected:
+	virtual bool intersect(const Ray& ray) = 0;
+	virtual void GUISettings() = 0;
+public:
 	glm::vec3 normal_;
-	MyMaterial material_;
+	Material material_;
 };

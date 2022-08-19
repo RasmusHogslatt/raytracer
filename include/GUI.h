@@ -7,6 +7,7 @@ class GUI {
 public:
 	GUI(Parameters& appParameters);
 	void menu();
+	void misc();
 	void controlPanel();
 	void camerasettings();
 	void sceneconstruction();

@@ -5,11 +5,11 @@
 #include <lights/Light.h>
 #include <shapes/Shape.h>
 #include <materials/Material.h>
-#include <Primitive.h>
-#include <MyCamera.h>
 #include <Actor.h>
+#include <cameras/Camera.h>
+
 class Scene {
 public:
-	std::vector<std::shared_ptr<Actor>> primitives;
-	std::vector<std::shared_ptr<MyCamera>> cameras_;
+	std::vector<Actor*> primitives;
+	std::vector<Camera*> cameras_;
 };

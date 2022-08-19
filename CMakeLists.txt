@@ -26,22 +26,18 @@ set(HEADER_FILES
     include/MyMaterial.h
     include/Window.h
     include/GUI.h
+    include/Ray.h
     include/Renderer.h
     include/DebugRenderer.h
-    include/PixelRenderer.h
     include/MySphere.h
     include/Parameters.h
-    include/MyCamera.h
     include/Scene.h
-    include/Point.h
-    include/Film.h
-    include/Ray.h
-    include/Primitive.h
     include/shapes/Shape.h
     include/shapes/Sphere.h
     include/accelerators/Aggregate.h
     include/cameras/Camera.h
     include/cameras/PerspectiveCamera.h
+    include/cameras/OrthographicCamera.h
     include/samplers/Sampler.h
     include/samplers/CenterSampler.h
     include/samplers/RandomSampler.h
@@ -59,21 +55,17 @@ set(SOURCE_FILES
     source/MyMaterial.cpp
     source/Window.cpp
     source/GUI.cpp
-    source/Point.cpp
+    source/Ray.cpp
     source/Renderer.cpp
     source/DebugRenderer.cpp
-    source/PixelRenderer.cpp
     source/MySphere.cpp
-    source/MyCamera.cpp
     source/Scene.cpp
-    source/Primitive.cpp
-    source/Film.cpp
-    source/Ray.cpp
     source/shapes/Shape.cpp
     source/shapes/Sphere.cpp
     source/accelerators/Aggregate.cpp
     source/cameras/Camera.cpp
     source/cameras/PerspectiveCamera.cpp
+    source/cameras/OrthographicCamera.cpp
     source/samplers/Sampler.cpp
     source/samplers/CenterSampler.cpp
     source/samplers/RandomSampler.cpp

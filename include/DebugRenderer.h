@@ -12,7 +12,8 @@ public:
 	DebugRenderer(Parameters& params);
 	
 	void Render(const Scene& scene);
-	glm::vec2 getSamplePosition(int x, int y, int currentSample);
+	void GUISettings();
 private:
 	Parameters& p;
+	int samples = 1;
 };

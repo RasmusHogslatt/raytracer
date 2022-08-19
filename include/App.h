@@ -1,4 +1,4 @@
-#pragma once
+ #pragma once
 
 #include <Texture.h>
 #include <imgui.h>
@@ -37,7 +37,5 @@ public:
 
 private:
 	Parameters params;
-	int x = 0;
-	ImVec2 pos = ImVec2(0,0);
 	std::vector<ImVec2> positions; // Construct objects from positions
 };

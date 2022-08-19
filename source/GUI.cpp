@@ -41,40 +41,59 @@ void GUI::menu() {
 
 void GUI::controlPanel() {
 	ImGui::BeginChild("Settings", ImVec2(600, 0), true);
-	sceneconstruction();
+	misc();
+	ImGui::NewLine();
 	camerasettings();
+	ImGui::NewLine();
 	rendersettings();
+	ImGui::NewLine();
+	sceneconstruction();
 	ImGui::EndChild();
 }
 
-void GUI::sceneconstruction() {
+void GUI::misc() {
 	ImGui::SliderInt("Active renderer", &params.activeRenderer_, 0, static_cast<int>(params.renderers_.size() - 1));
 	ImGui::SliderInt("Active Camera", &params.activeCamera, 0, static_cast<int>(params.scene.cameras_.size() - 1));
 	ImGui::SliderInt("Active sampler", &params.activeSampler, 0, static_cast<int>(params.samplers_.size() - 1));
-	ImGui::SliderFloat3("Actor position", &params.actorPos_.x, -10, 10);
-	ImGui::SliderFloat("Radius", &params.radius_, 0, 50);
-	ImGui::ColorPicker4("Color", &params.material_.color_.x);
 	ImGui::Checkbox("Show viewport actor", &params.showViewportActor);
+}
+
+void GUI::sceneconstruction() {
+	ImGui::Text("SCENE OBJECT");
+	ImGui::SliderInt("Select object type", &params.activeObjectSelection, 0, static_cast<int>(params.samplers_.size() - 1));
 	if (ImGui::Button("Add actor")) {
-		// To scene
-		//params.scene_.push_back(std::make_shared<MySphere>(MySphere()));
-		params.scene.primitives.push_back(std::make_shared<MySphere>(MySphere()));
+		if (params.activeObjectSelection == 0) {
+			params.scene.primitives.push_back(new MySphere(params.sphere));
+		}
+		else if (params.activeObjectSelection == 1) {
+			//pushback other primitive
+		}
+
 		// To viewport
 		dummyActor.position = ImVec2(params.actorPos_.x, params.actorPos_.y);
 		dummyActor.z = params.actorPos_.z;
 		dummyActor.radius = params.radius_;
-		dummyActor.color = GLMToImVec4(params.material_.color_);
+		dummyActor.color = GLMToImVec4(params.material_.colors[params.material_.colorType]);
 		params.viewportActors.push_back(dummyActor);
 	}
+	if (params.activeObjectSelection == 0) {
+		params.sphere.GUISettings();
+	}
+	else if (params.activeObjectSelection == 1) {
+		//guisettings for other primitive
+	}
+
 }
 
 void GUI::camerasettings() {
-	params.scene.cameras_[params.activeCamera]->GUIsettings();
+	ImGui::Text("CAMERA");
+	params.scene.cameras_[params.activeCamera]->GUISettings();
 }
 
 void GUI::rendersettings() {
-	ImGui::SliderInt("Samples per pixel", &params.samples_, 1, 10);
-	ImGui::SliderInt("Sample mode", &params.sampleMode, 0, 1);
+	ImGui::Text("RENDERER");
+	params.renderers_[params.activeRenderer_]->GUISettings();
+
 	if (ImGui::Button("Render")) {
 		params.renderStart = true;
 	}
@@ -96,6 +115,7 @@ void GUI::renderport() {
 	ImVec2 topleft = renderTexturePos_;
 	ImVec2 bottomright = ImVec2(topleft.x + params.renderTexture_.getWidth(), topleft.y + params.renderTexture_.getHeight());
 	ImGui::GetWindowDrawList()->AddImage((void*)(intptr_t)params.renderTexture_.ID_, topleft, bottomright);
+	
 	params.renderTexture_.updateTextureData();
 }
 
@@ -123,15 +143,15 @@ void GUI::glviewport()
 
 	// Camera
 	ImVec2 cam1pos = ImVec2(centerOfViewport1.x + params.scene.cameras_[params.activeCamera]->position.x * scale, centerOfViewport1.y + params.scene.cameras_[params.activeCamera]->position.z * scale);
-	ImVec2 cam1dir = ImVec2(centerOfViewport1.x + (params.scene.cameras_[params.activeCamera]->position.x + params.scene.cameras_[params.activeCamera]->direction.x) * scale, centerOfViewport1.y + (params.scene.cameras_[params.activeCamera]->position.z + params.scene.cameras_[params.activeCamera]->direction.z) * scale);
+	ImVec2 cam1dir = ImVec2(centerOfViewport1.x + (params.scene.cameras_[params.activeCamera]->position.x + params.scene.cameras_[params.activeCamera]->front.x) * scale, centerOfViewport1.y + (params.scene.cameras_[params.activeCamera]->position.z + params.scene.cameras_[params.activeCamera]->front.z) * scale);
 	drawList->AddCircleFilled(cam1pos, cameraRadius, textColor);
 	drawList->AddLine(cam1pos, cam1dir, textColor);
 
 	if (params.showViewportActor) {
-		drawList->AddCircleFilled(ImVec2(centerOfViewport1.x + params.actorPos_.x * scale, centerOfViewport1.y + params.actorPos_.z * scale), params.radius_ * scale, dummyColor);
+		drawList->AddCircleFilled(ImVec2(centerOfViewport1.x + params.sphere.position_.x * scale, centerOfViewport1.y + params.sphere.position_.z * scale), params.sphere.radius_ * scale, dummyColor);
 	}
-	for (int i = 0; i < params.viewportActors.size(); ++i) {
-		drawList->AddCircleFilled(ImVec2(centerOfViewport1.x + params.viewportActors[i].position.x * scale, centerOfViewport1.y + params.viewportActors[i].z * scale), params.viewportActors[i].radius * scale, ImGui::ColorConvertFloat4ToU32(params.viewportActors[i].color));
+	for (int i = 0; i < params.scene.primitives.size(); ++i) {
+		drawList->AddCircleFilled(ImVec2(centerOfViewport1.x + params.scene.primitives[i]->position_.x * scale, centerOfViewport1.y + params.scene.primitives[i]->position_.z * scale), params.viewportActors[i].radius * scale, ImGui::ColorConvertFloat4ToU32(params.viewportActors[i].color));
 	}
 
 	// 2nd viewport
@@ -140,12 +160,12 @@ void GUI::glviewport()
 
 	// Camera
 	ImVec2 cam2pos = ImVec2(centerOfViewport2.x - params.scene.cameras_[params.activeCamera]->position.z * scale, centerOfViewport2.y - params.scene.cameras_[params.activeCamera]->position.y * scale);
-	ImVec2 cam2dir = ImVec2(centerOfViewport2.x - (params.scene.cameras_[params.activeCamera]->position.z + params.scene.cameras_[params.activeCamera]->direction.z) * scale, centerOfViewport2.y - (params.scene.cameras_[params.activeCamera]->position.y + params.scene.cameras_[params.activeCamera]->direction.y) * scale);
+	ImVec2 cam2dir = ImVec2(centerOfViewport2.x - (params.scene.cameras_[params.activeCamera]->position.z + params.scene.cameras_[params.activeCamera]->front.z) * scale, centerOfViewport2.y - (params.scene.cameras_[params.activeCamera]->position.y + params.scene.cameras_[params.activeCamera]->front.y) * scale);
 	drawList->AddCircleFilled(cam2pos, cameraRadius, textColor);
 	drawList->AddLine(cam2pos, cam2dir, textColor);
 
 	if (params.showViewportActor) {
-		drawList->AddCircleFilled(ImVec2(centerOfViewport2.x - params.actorPos_.z * scale, centerOfViewport2.y - params.actorPos_.y * scale), params.radius_ * scale, dummyColor);
+		drawList->AddCircleFilled(ImVec2(centerOfViewport2.x - params.sphere.position_.z * scale, centerOfViewport2.y - params.sphere.position_.y * scale), params.sphere.radius_ * scale, dummyColor);
 	}
 	for (int i = 0; i < params.viewportActors.size(); ++i) {
 		drawList->AddCircleFilled(ImVec2(centerOfViewport2.x - params.viewportActors[i].z * scale, centerOfViewport2.y - params.viewportActors[i].position.y * scale), params.viewportActors[i].radius * scale, ImGui::ColorConvertFloat4ToU32(params.viewportActors[i].color));
@@ -157,12 +177,12 @@ void GUI::glviewport()
 
 	// Camera
 	ImVec2 cam3pos = ImVec2(centerOfViewport3.x + params.scene.cameras_[params.activeCamera]->position.x * scale, centerOfViewport3.y - params.scene.cameras_[params.activeCamera]->position.y * scale);
-	ImVec2 cam3dir = ImVec2(centerOfViewport3.x + (params.scene.cameras_[params.activeCamera]->position.x + params.scene.cameras_[params.activeCamera]->direction.x) * scale, centerOfViewport3.y - (params.scene.cameras_[params.activeCamera]->position.y + params.scene.cameras_[params.activeCamera]->direction.y) * scale);
+	ImVec2 cam3dir = ImVec2(centerOfViewport3.x + (params.scene.cameras_[params.activeCamera]->position.x + params.scene.cameras_[params.activeCamera]->front.x) * scale, centerOfViewport3.y - (params.scene.cameras_[params.activeCamera]->position.y + params.scene.cameras_[params.activeCamera]->front.y) * scale);
 	drawList->AddCircleFilled(cam3pos, cameraRadius, textColor);
 	drawList->AddLine(cam3pos, cam3dir, textColor);
 
 	if (params.showViewportActor) {
-		drawList->AddCircleFilled(ImVec2(centerOfViewport3.x + params.actorPos_.x * scale, centerOfViewport3.y - params.actorPos_.y * scale), params.radius_ * scale, dummyColor);
+		drawList->AddCircleFilled(ImVec2(centerOfViewport3.x + params.sphere.position_.x * scale, centerOfViewport3.y - params.sphere.position_.y * scale), params.sphere.radius_ * scale, dummyColor);
 	}
 	for (int i = 0; i < params.viewportActors.size(); ++i) {
 		drawList->AddCircleFilled(ImVec2(centerOfViewport3.x + params.viewportActors[i].position.x * scale, centerOfViewport3.y - params.viewportActors[i].position.y * scale), params.viewportActors[i].radius * scale, ImGui::ColorConvertFloat4ToU32(params.viewportActors[i].color));

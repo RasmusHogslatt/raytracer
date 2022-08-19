@@ -2,14 +2,14 @@
 
 #include <GLFW/glfw3.h>
 #include <Texture.h>
+#include <Scene.h>
 #include <Actor.h>
 #include <vector>
 #include <memory>
-#include <MyCamera.h>
-#include <Scene.h>
-#include <MyMaterial.h>
+#include <materials/Material.h>
 #include <integrators/Integrator.h>
 #include <samplers/Sampler.h>
+#include <MySphere.h>
 
 struct ViewportActor {
 	ImVec2 position = ImVec2(0,0);
@@ -39,23 +39,26 @@ struct Parameters {
 
 	// Scene
 	glm::vec3 actorPos_ = glm::vec3(0);
-	MyMaterial material_ = MyMaterial();
+	Material material_ = Material();
 	float radius_ = 1.0;
+	MySphere sphere = MySphere();
+	std::vector<Actor*> actors;
 
 	Scene scene;
-	std::vector <std::shared_ptr<Integrator>> renderers_;
-	std::vector <std::shared_ptr<Sampler>> samplers_;
-	bool showViewportActor;
+	std::vector<Integrator*> renderers_;
+	std::vector <Sampler*> samplers_;
+	bool showViewportActor = true;
 
 	// Select methods
 	int activeCamera = 0;
 	int activeRenderer_ = 0;
 	int activeSampler = 0;
+	int activeObjectSelection = 0;
 	
 	// Renderer
 	int samples_ = 1;
 	bool renderStart = false;
-	size_t textureSize = 768 * 480;
+	size_t textureSize = 1280 * 720;
 	std::vector<ViewportActor> viewportActors;
 	int sampleMode = 0;
 };

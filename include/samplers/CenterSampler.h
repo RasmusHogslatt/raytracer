@@ -1,9 +1,10 @@
 #pragma once
 
-#include <Parameters.h>
 #include <samplers/Sampler.h>
+#include <cameras/Camera.h>
+
 class CenterSampler : public Sampler {
 public:
 	CenterSampler();
-	glm::vec2 getSamplePosition(int x, int y, MyCamera& c, int currentSample);
+	glm::vec2 getSamplePosition(int x, int y, Camera& c, int currentSample);
 };

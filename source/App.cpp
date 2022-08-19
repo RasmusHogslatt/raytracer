@@ -3,10 +3,12 @@
 #include <App.h>
 #include <GLFW/glfw3.h>
 #include <Renderer.h>
-#include <PixelRenderer.h>
 #include <DebugRenderer.h>
 #include <samplers/CenterSampler.h>
 #include <samplers/Sampler.h>
+#include <cameras/PerspectiveCamera.h>
+#include <cameras/OrthographicCamera.h>
+#include <samplers/RandomSampler.h>
 
 void App::callGUI() {
 	updateWindowSizeAndPosition();
@@ -30,14 +32,20 @@ App::App(int width, int height) {
 	params.renderTexture_.createTexture(1280, 720);
 	params.viewportTexture_.createTexture();
 
-	DebugRenderer debugRenderer(params);
-
+	// Add one of each actor type for selection in GUI
+	MySphere sphere = MySphere(1.0f);
+	params.actors.push_back(&sphere);
 
 	// Add custom cameras and renderers
-	params.scene.cameras_.push_back(std::make_shared<MyCamera>(MyCamera()));
-	params.renderers_.push_back(std::make_shared<DebugRenderer>(debugRenderer));
-	//params.renderers_.push_back(std::make_shared<PixelRenderer>(pixelRenderer));
-	params.samplers_.push_back(std::make_shared<CenterSampler>(CenterSampler()));
+	params.scene.cameras_.push_back(new PerspectiveCamera(45));
+	params.scene.cameras_.push_back(new OrthographicCamera(45));
+
+	// Add integrators
+	params.renderers_.push_back(new DebugRenderer(params));
+	
+	// Add samplers
+	params.samplers_.push_back(new CenterSampler());
+	params.samplers_.push_back(new RandomSampler());
 }
 
 App::~App()

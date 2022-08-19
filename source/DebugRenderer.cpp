@@ -1,57 +1,47 @@
 #pragma once
 
 #include "DebugRenderer.h"
+#include <Ray.h>
 
 DebugRenderer::DebugRenderer(Parameters& params) : p{ params } {}
 
 void DebugRenderer::Render(const Scene& scene) {
-	int width = p.renderTexture_.getWidth();
-	int height = p.renderTexture_.getHeight();
+	size_t width = p.renderTexture_.getWidth();
+	size_t height = p.renderTexture_.getHeight();
 	glm::vec4 color = glm::vec4(0);
 	glm::vec2 xyPos = glm::vec2(0);
-	glm::vec3 ray;
+	Ray ray;
+	// Raster space [0, width] && [0, height]
 	for (int y = 0; y < height; ++y) {
 		for (int x = 0; x < width; ++x) {
-			for (int currentSample = 0; currentSample < p.samples_; ++currentSample) {
-				xyPos = p.samplers_[p.activeSampler]->getSamplePosition(x, y, *p.scene.cameras_[p.activeCamera], 1);
-				ray = p.scene.cameras_[p.activeCamera]->generateRay(xyPos.x, xyPos.y);
+			for (int currentSample = 1; currentSample <= scene.cameras_[p.activeCamera]->samples; ++currentSample) {
+				xyPos = p.samplers_[p.activeSampler]->getSamplePosition(x, y, *p.scene.cameras_[p.activeCamera], currentSample);
+				ray = p.scene.cameras_[p.activeCamera]->generateRay(xyPos);
+			
 				for (int i = 0; i < p.scene.primitives.size(); ++i) {
-					if (p.scene.primitives[i]->intersect(p.scene.cameras_[p.activeCamera]->position, ray)) {
+					if (x == 1280 / 2 || y == 720 / 2) {
+						color = glm::vec4(0, 0, 1, 1);
+					}
+					else if (p.scene.primitives[i]->intersect(ray)) {
 						color = glm::vec4(1, 0, 0, 1);
 					}
+					else if (x == 0 || x == 1279 || y == 0 || y == 719) {
+						color = glm::vec4(1, 1, 1, 1);
+					}
 					else {
-						color = glm::vec4(0, 1, 0, 1);
+						color = glm::vec4(0, 0, 0, 1);
 					}
 				}
+				//average color here
 			}
 			p.renderTexture_.setPixelColor(x, y, ImVec4(color.r, color.g, color.b, color.a));
 		}
 	}
-
 	p.renderTexture_.updateTextureData();
 }
 
-glm::vec2 DebugRenderer::getSamplePosition(int x, int y, int currentSample)
+void DebugRenderer::GUISettings()
 {
-	// Check correct calculations based aspectratio, fov etc. Is a pixel truly 1:1 in size? or w/h and h/w respectively
-	glm::vec2 pos = glm::vec2(0);
-	float width = p.scene.cameras_[p.activeCamera]->resolution.x;
-	float height = p.scene.cameras_[p.activeCamera]->resolution.y;
-	float aspectRatio = width / height;
-
-	// Center of pixel
-	pos.x = (static_cast<float>(x) / width) - 0.5;
-	pos.y = (static_cast<float>(y) / height) - 0.5;
-
-	// Single sample in center of pixel
-	if (p.sampleMode == 0) {
-		return pos;
-	}
-	// Random position within pixel
-	else if (p.sampleMode == 1) {
-		float r = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-		pos.x += r / width;
-		pos.y += r / height;
-	}
-	return pos;
+	ImGui::SameLine();
+	ImGui::Text(": DebugRenderer");
 }

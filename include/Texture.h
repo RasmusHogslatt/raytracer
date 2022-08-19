@@ -13,7 +13,7 @@ public:
 
 	void clearTextureColor(ImVec4 color = ImVec4(0,0,0,1));
 
-	void createTexture(size_t width = 768, size_t height = 480);
+	void createTexture(size_t width = 1280, size_t height = 720);
 
 	void updateTextureData();
 
