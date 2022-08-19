@@ -39,14 +39,13 @@ glm::vec2 Sampler::getCenterSample(int x, int y, Camera& c)
 	glm::vec2 pos = glm::vec2(0);
 	float width = static_cast<float>(c.resolution.x);
 	float height = static_cast<float>(c.resolution.y);
-	
 
 	// Pixel space x: [0, width] y: [0, height]
 	float pixelx = static_cast<float>(x);
 	float pixely = static_cast<float>(y);
 
 	// Normalized device coordinates x: [0, 1] y: [0, 1]
-	float NDCx = (pixelx + 0.5f) / (width);
+	float NDCx = (pixelx + 0.5f) / width;
 	float NDCy = (pixely + 0.5f) / height;
 
 	// Screen space x: [-1, 1] y: [-1, 1]
@@ -57,9 +56,10 @@ glm::vec2 Sampler::getCenterSample(int x, int y, Camera& c)
 	float camerax = screenx * c.aspectRatio;
 	float cameray = screeny;
 
+	float scale = tan(glm::radians(c.fov * 0.5f));
 	// Set sample position
-	pos.x = camerax;
-	pos.y = cameray;
+	pos.x = camerax * scale;
+	pos.y = cameray * scale;
 
 	return pos;
 }

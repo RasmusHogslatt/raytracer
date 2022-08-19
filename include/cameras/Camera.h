@@ -5,7 +5,7 @@
 
 class Camera {
 public:
-	Camera(glm::vec3 position = glm::vec3(0, 0, 8), glm::vec3 front = glm::vec3(0, 0, -1), glm::vec3 up = glm::vec3(0, 1, 0), glm::ivec2 resolution = glm::ivec2(1280, 720), int samples = 1);
+	Camera(glm::vec3 position = glm::vec3(0, 0, 8), glm::vec3 front = glm::vec3(0, 0, -1), glm::vec3 up = glm::vec3(0, 1, 0), glm::ivec2 resolution = glm::ivec2(1280, 720), int samples = 1, float fov = 55);
 
 	void updateVectors();
 
@@ -21,6 +21,7 @@ public:
 	float yaw, pitch;
 	int samples;
 	float aspectRatio;
+	float fov;
 	float randomFloat();
 	float randomFloat(float min, float max);
 };

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 
-PerspectiveCamera::PerspectiveCamera(float fov) : Camera(), vfov{ fov }, lensRadius{ 1.0f }
+PerspectiveCamera::PerspectiveCamera() : Camera(), lensRadius{ 1.0f }
 {
 }
 
@@ -34,7 +34,7 @@ void PerspectiveCamera::GUISettings()
 	changed = ImGui::SliderFloat3("Position", &position.x, -10, 10);
 	changed = ImGui::SliderFloat("Yaw", &yaw, -180, 180);
 	changed = ImGui::SliderFloat("Pitch", &pitch, -180, 180);
-	changed = ImGui::SliderFloat("FOV", &vfov, 10, 150);
+	changed = ImGui::SliderFloat("FOV", &fov, 10, 150);
 	changed = ImGui::SliderFloat("Lens radius", &lensRadius, 0, 100);
 
 	updateVectors();

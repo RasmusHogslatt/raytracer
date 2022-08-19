@@ -37,7 +37,7 @@ App::App(int width, int height) {
 	params.actors.push_back(&sphere);
 
 	// Add custom cameras and renderers
-	params.scene.cameras_.push_back(new PerspectiveCamera(45));
+	params.scene.cameras_.push_back(new PerspectiveCamera());
 	params.scene.cameras_.push_back(new OrthographicCamera(45));
 
 	// Add integrators

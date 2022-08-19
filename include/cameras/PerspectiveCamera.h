@@ -4,10 +4,9 @@
 
 class PerspectiveCamera : public Camera {
 public:
-	PerspectiveCamera(float fov);
+	PerspectiveCamera();
 	Ray generateRay(const glm::vec2& samplePosition);
 	void GUISettings();
 
-	float vfov;
 	float lensRadius;
 };
