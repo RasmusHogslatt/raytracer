@@ -9,7 +9,7 @@
 #include <materials/Material.h>
 #include <integrators/Integrator.h>
 #include <samplers/Sampler.h>
-#include <MySphere.h>
+#include <shapes/Sphere.h>
 
 struct ViewportActor {
 	ImVec2 position = ImVec2(0,0);
@@ -27,8 +27,8 @@ struct ViewportCamera {
 struct Parameters {
 	// Window
 	GLFWwindow* glfwWindow_ = nullptr;
-	int glfwWidth_ = 1920;
-	int glfwHeight_ = 1080;
+	int glfwWidth_ = 2560;
+	int glfwHeight_ = 1440;
 	const char* glfwTitle_ = "Physical based raytracer";
 
 	// Rendertexture
@@ -41,7 +41,8 @@ struct Parameters {
 	glm::vec3 actorPos_ = glm::vec3(0);
 	Material material_ = Material();
 	float radius_ = 1.0;
-	MySphere sphere = MySphere();
+	Sphere sphere = Sphere();
+	Light light;
 	std::vector<Actor*> actors;
 
 	Scene scene;
@@ -50,7 +51,6 @@ struct Parameters {
 	bool showViewportActor = true;
 
 	// Select methods
-	int activeCamera = 0;
 	int activeRenderer_ = 0;
 	int activeSampler = 0;
 	int activeObjectSelection = 0;
@@ -58,7 +58,7 @@ struct Parameters {
 	// Renderer
 	int samples_ = 1;
 	bool renderStart = false;
-	size_t textureSize = 1280 * 720;
+	size_t textureSize = 1920 * 1080;
 	std::vector<ViewportActor> viewportActors;
 	int sampleMode = 0;
 };

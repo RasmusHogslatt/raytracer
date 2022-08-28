@@ -20,7 +20,7 @@ static void glfw_error_callback(int error, const char* description);
 class App
 {
 public:
-	App(int width = 1920, int height = 1080);
+	App(int width = 2560, int height = 1440);
 
 	~App();
 

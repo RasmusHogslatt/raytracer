@@ -1,12 +1,13 @@
-//#pragma once
-//
-//#include <shapes/Shape.h>
-//
-//class Sphere : public Shape {
-//public:
-//	Sphere(float radius);
-//	bool intersect(Ray& ray, float* tHit) const;
-//private:
-//	float radius;
-//
-//};
+#pragma once
+
+#include <Object.h>
+
+class Sphere : public Object {
+public:
+	Sphere(float radius = 1.0);
+	Sphere(const Sphere& old);
+	bool intersect(const Ray& ray, float& distance);
+	void GUISettings();
+public:
+	float radius_;
+};

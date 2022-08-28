@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <glfw/glfw3.h>
 #include <imgui.h>
+#include <string>
 
 class Texture {
 public:
@@ -13,13 +14,15 @@ public:
 
 	void clearTextureColor(ImVec4 color = ImVec4(0,0,0,1));
 
-	void createTexture(size_t width = 1280, size_t height = 720);
+	void createTexture(size_t width = 1920, size_t height = 1080);
 
 	void updateTextureData();
 
 	size_t getWidth() const;
 	size_t getHeight() const;
 	void setData(unsigned char* data);
+
+	void exportPNG(const std::string& filename, int compression);
 
 	GLuint ID_;
 	unsigned char* data_;

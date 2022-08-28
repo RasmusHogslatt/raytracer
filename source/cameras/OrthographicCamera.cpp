@@ -9,7 +9,7 @@ OrthographicCamera::OrthographicCamera(float fov)
 
 Ray OrthographicCamera::generateRay(const glm::vec2& samplePosition)
 {
-	glm::vec3 s = position + samplePosition.x * right/ 2.0f + samplePosition.y * up /2.0f;
+	glm::vec3 s = position + samplePosition.x * right/ static_cast<float>(resolution.x) + samplePosition.y * up / static_cast<float>(resolution.y);
 	return Ray(s, front);
 }
 

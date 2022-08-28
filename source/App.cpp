@@ -2,13 +2,13 @@
 
 #include <App.h>
 #include <GLFW/glfw3.h>
-#include <Renderer.h>
 #include <DebugRenderer.h>
 #include <samplers/CenterSampler.h>
 #include <samplers/Sampler.h>
 #include <cameras/PerspectiveCamera.h>
 #include <cameras/OrthographicCamera.h>
 #include <samplers/RandomSampler.h>
+#include <lights/Light.h>
 
 void App::callGUI() {
 	updateWindowSizeAndPosition();
@@ -29,12 +29,14 @@ App::App(int width, int height) {
 	positions = std::vector<ImVec2>();
 	initGLFWandIMGUI();
 
-	params.renderTexture_.createTexture(1280, 720);
+	params.renderTexture_.createTexture(1920, 1080);
 	params.viewportTexture_.createTexture();
 
 	// Add one of each actor type for selection in GUI
-	MySphere sphere = MySphere(1.0f);
+	Sphere sphere = Sphere(1.0f);
 	params.actors.push_back(&sphere);
+	Light light = Light();
+	params.actors.push_back(&light);
 
 	// Add custom cameras and renderers
 	params.scene.cameras_.push_back(new PerspectiveCamera());
@@ -46,11 +48,15 @@ App::App(int width, int height) {
 	// Add samplers
 	params.samplers_.push_back(new CenterSampler());
 	params.samplers_.push_back(new RandomSampler());
+
+	Light l = Light();
+	l.position_ = glm::vec3(5, 5, 5);
+	params.scene.lights.push_back(new Light(l));
 }
 
 App::~App()
 {
-	std::cout << "Closing application. Goodbye!\n";
+	std::cout << "SUCCESSFUL TERMINATION\n\n";
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
@@ -62,6 +68,7 @@ App::~App()
 
 void App::updateWindowSizeAndPosition() {
 	glfwGetWindowSize(params.glfwWindow_, &params.glfwWidth_, &params.glfwHeight_);
+	auto io = ImGui::GetIO();
 	ImGui::SetNextWindowSize(ImVec2(static_cast<float>(params.glfwWidth_), static_cast<float>(params.glfwHeight_)));
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 }
@@ -78,7 +85,15 @@ void App::initGLFWandIMGUI() {
 
 
 	// Create window with graphics context
-	params.glfwWindow_ = glfwCreateWindow(params.glfwWidth_, params.glfwHeight_, params.glfwTitle_, NULL, NULL);
+	auto monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+	
+	glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+	glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+	glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+
+	params.glfwWindow_ = glfwCreateWindow(mode->width, mode->height, "My Title", monitor, NULL);
 	if (params.glfwWindow_ == NULL) {
 		std::exit(1);
 	}

@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include <iostream>
-#include <MySphere.h>
+#include <shapes/Sphere.h>
 #include <cmath>
 
 glm::vec4 ImVec4ToGLM(const ImVec4& v)
@@ -29,9 +29,15 @@ GUI::GUI(Parameters& appParameters) : params{ appParameters }, renderTexturePos_
 
 void GUI::menu() {
 	if (ImGui::BeginMenuBar()) {
-		if (ImGui::BeginMenu("File")) {
-			if (ImGui::MenuItem("Close")) {
+		if (ImGui::BeginMenu("Close")) {
 				glfwSetWindowShouldClose(params.glfwWindow_, true);
+			if (ImGui::MenuItem("Close")) {
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("File")) {
+			if (ImGui::MenuItem("Export PNG")) {
+				params.renderTexture_.exportPNG("Output", 4);
 			}
 			ImGui::EndMenu();
 		}
@@ -53,7 +59,7 @@ void GUI::controlPanel() {
 
 void GUI::misc() {
 	ImGui::SliderInt("Active renderer", &params.activeRenderer_, 0, static_cast<int>(params.renderers_.size() - 1));
-	ImGui::SliderInt("Active Camera", &params.activeCamera, 0, static_cast<int>(params.scene.cameras_.size() - 1));
+	ImGui::SliderInt("Active Camera", &params.scene.activeCamera, 0, static_cast<int>(params.scene.cameras_.size() - 1));
 	ImGui::SliderInt("Active sampler", &params.activeSampler, 0, static_cast<int>(params.samplers_.size() - 1));
 	ImGui::Checkbox("Show viewport actor", &params.showViewportActor);
 }
@@ -63,10 +69,10 @@ void GUI::sceneconstruction() {
 	ImGui::SliderInt("Select object type", &params.activeObjectSelection, 0, static_cast<int>(params.samplers_.size() - 1));
 	if (ImGui::Button("Add actor")) {
 		if (params.activeObjectSelection == 0) {
-			params.scene.primitives.push_back(new MySphere(params.sphere));
+			params.scene.primitives.push_back(new Sphere(params.sphere));
 		}
 		else if (params.activeObjectSelection == 1) {
-			//pushback other primitive
+			params.scene.lights.push_back(new Light(params.light));
 		}
 
 		// To viewport
@@ -80,14 +86,14 @@ void GUI::sceneconstruction() {
 		params.sphere.GUISettings();
 	}
 	else if (params.activeObjectSelection == 1) {
-		//guisettings for other primitive
+		params.light.GUISettings();
 	}
 
 }
 
 void GUI::camerasettings() {
 	ImGui::Text("CAMERA");
-	params.scene.cameras_[params.activeCamera]->GUISettings();
+	params.scene.cameras_[params.scene.activeCamera]->GUISettings();
 }
 
 void GUI::rendersettings() {
@@ -109,7 +115,7 @@ void GUI::viewportPanel() {
 
 void GUI::renderport() {
 	if (params.renderStart) {
-		params.renderers_[params.activeRenderer_]->Render(params.scene);
+		params.renderers_[params.activeRenderer_]->Render();
 		params.renderStart = false;
 	}
 	ImVec2 topleft = renderTexturePos_;
@@ -142,8 +148,8 @@ void GUI::glviewport()
 	drawList->AddRect(viewportPos_, ImVec2(viewportPos_.x + dims.x, viewportPos_.y + dims.y), borderColor);
 
 	// Camera
-	ImVec2 cam1pos = ImVec2(centerOfViewport1.x + params.scene.cameras_[params.activeCamera]->position.x * scale, centerOfViewport1.y + params.scene.cameras_[params.activeCamera]->position.z * scale);
-	ImVec2 cam1dir = ImVec2(centerOfViewport1.x + (params.scene.cameras_[params.activeCamera]->position.x + params.scene.cameras_[params.activeCamera]->front.x) * scale, centerOfViewport1.y + (params.scene.cameras_[params.activeCamera]->position.z + params.scene.cameras_[params.activeCamera]->front.z) * scale);
+	ImVec2 cam1pos = ImVec2(centerOfViewport1.x + params.scene.cameras_[params.scene.activeCamera]->position.x * scale, centerOfViewport1.y + params.scene.cameras_[params.scene.activeCamera]->position.z * scale);
+	ImVec2 cam1dir = ImVec2(centerOfViewport1.x + (params.scene.cameras_[params.scene.activeCamera]->position.x + params.scene.cameras_[params.scene.activeCamera]->front.x) * scale, centerOfViewport1.y + (params.scene.cameras_[params.scene.activeCamera]->position.z + params.scene.cameras_[params.scene.activeCamera]->front.z) * scale);
 	drawList->AddCircleFilled(cam1pos, cameraRadius, textColor);
 	drawList->AddLine(cam1pos, cam1dir, textColor);
 
@@ -159,8 +165,8 @@ void GUI::glviewport()
 	drawList->AddRect(secondWindowPos, ImVec2(secondWindowPos.x + dims.x, secondWindowPos.y + dims.y), borderColor);
 
 	// Camera
-	ImVec2 cam2pos = ImVec2(centerOfViewport2.x - params.scene.cameras_[params.activeCamera]->position.z * scale, centerOfViewport2.y - params.scene.cameras_[params.activeCamera]->position.y * scale);
-	ImVec2 cam2dir = ImVec2(centerOfViewport2.x - (params.scene.cameras_[params.activeCamera]->position.z + params.scene.cameras_[params.activeCamera]->front.z) * scale, centerOfViewport2.y - (params.scene.cameras_[params.activeCamera]->position.y + params.scene.cameras_[params.activeCamera]->front.y) * scale);
+	ImVec2 cam2pos = ImVec2(centerOfViewport2.x - params.scene.cameras_[params.scene.activeCamera]->position.z * scale, centerOfViewport2.y - params.scene.cameras_[params.scene.activeCamera]->position.y * scale);
+	ImVec2 cam2dir = ImVec2(centerOfViewport2.x - (params.scene.cameras_[params.scene.activeCamera]->position.z + params.scene.cameras_[params.scene.activeCamera]->front.z) * scale, centerOfViewport2.y - (params.scene.cameras_[params.scene.activeCamera]->position.y + params.scene.cameras_[params.scene.activeCamera]->front.y) * scale);
 	drawList->AddCircleFilled(cam2pos, cameraRadius, textColor);
 	drawList->AddLine(cam2pos, cam2dir, textColor);
 
@@ -176,8 +182,8 @@ void GUI::glviewport()
 	drawList->AddRect(thirdWindowPos, ImVec2(thirdWindowPos.x + dims.x, thirdWindowPos.y + dims.y), borderColor);
 
 	// Camera
-	ImVec2 cam3pos = ImVec2(centerOfViewport3.x + params.scene.cameras_[params.activeCamera]->position.x * scale, centerOfViewport3.y - params.scene.cameras_[params.activeCamera]->position.y * scale);
-	ImVec2 cam3dir = ImVec2(centerOfViewport3.x + (params.scene.cameras_[params.activeCamera]->position.x + params.scene.cameras_[params.activeCamera]->front.x) * scale, centerOfViewport3.y - (params.scene.cameras_[params.activeCamera]->position.y + params.scene.cameras_[params.activeCamera]->front.y) * scale);
+	ImVec2 cam3pos = ImVec2(centerOfViewport3.x + params.scene.cameras_[params.scene.activeCamera]->position.x * scale, centerOfViewport3.y - params.scene.cameras_[params.scene.activeCamera]->position.y * scale);
+	ImVec2 cam3dir = ImVec2(centerOfViewport3.x + (params.scene.cameras_[params.scene.activeCamera]->position.x + params.scene.cameras_[params.scene.activeCamera]->front.x) * scale, centerOfViewport3.y - (params.scene.cameras_[params.scene.activeCamera]->position.y + params.scene.cameras_[params.scene.activeCamera]->front.y) * scale);
 	drawList->AddCircleFilled(cam3pos, cameraRadius, textColor);
 	drawList->AddLine(cam3pos, cam3dir, textColor);
 

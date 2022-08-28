@@ -2,6 +2,7 @@
 
 #include "Texture.h"
 #include <iostream>
+#include <stb_image_write.h>
 
 Texture::Texture() : data_{ nullptr }, width_{ 0 }, height_{ 0 }, format_{ GL_RGBA } {
 	glGenTextures(1, &ID_);
@@ -91,4 +92,9 @@ size_t Texture::getHeight() const {
 
 void Texture::setData(unsigned char* newData) {
 	data_ = newData;
+}
+
+void Texture::exportPNG(const std::string& filename, int compression)
+{
+	stbi_write_png(("../"+filename + ".png").c_str(), width_, height_, compression, data_, width_ * 4);
 }

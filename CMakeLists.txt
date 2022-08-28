@@ -23,13 +23,10 @@ set(HEADER_FILES
     include/Actor.h
     include/Texture.h
     include/Object.h
-    include/MyMaterial.h
     include/Window.h
     include/GUI.h
     include/Ray.h
-    include/Renderer.h
     include/DebugRenderer.h
-    include/MySphere.h
     include/Parameters.h
     include/Scene.h
     include/shapes/Shape.h
@@ -52,13 +49,10 @@ set(SOURCE_FILES
     source/Actor.cpp
     source/Texture.cpp
     source/Object.cpp
-    source/MyMaterial.cpp
     source/Window.cpp
     source/GUI.cpp
     source/Ray.cpp
-    source/Renderer.cpp
     source/DebugRenderer.cpp
-    source/MySphere.cpp
     source/Scene.cpp
     source/shapes/Shape.cpp
     source/shapes/Sphere.cpp
