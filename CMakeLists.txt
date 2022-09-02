@@ -19,16 +19,17 @@ find_package(OpenGL REQUIRED)
 add_subdirectory(external)
 
 set(HEADER_FILES
-	include/App.h
-    include/Actor.h
-    include/Texture.h
-    include/Object.h
-    include/Window.h
-    include/GUI.h
-    include/Ray.h
-    include/DebugRenderer.h
-    include/Parameters.h
-    include/Scene.h
+	include/core/App.h
+    include/core/Actor.h
+    include/core/Texture.h
+    include/core/Object.h
+    include/core/Window.h
+    include/core/GUI.h
+    include/core/Ray.h
+    include/integrators/MonteCarloIntegrator.h
+    include/core/Parameters.h
+    include/core/Scene.h
+    include/core/Primitive.h
     include/shapes/Shape.h
     include/shapes/Sphere.h
     include/accelerators/Aggregate.h
@@ -45,15 +46,16 @@ set(HEADER_FILES
 
 set(SOURCE_FILES
     main.cpp
-    source/App.cpp
-    source/Actor.cpp
-    source/Texture.cpp
-    source/Object.cpp
-    source/Window.cpp
-    source/GUI.cpp
-    source/Ray.cpp
-    source/DebugRenderer.cpp
-    source/Scene.cpp
+    source/core/App.cpp
+    source/core/Actor.cpp
+    source/core/Texture.cpp
+    source/core/Object.cpp
+    source/core/Window.cpp
+    source/core/GUI.cpp
+    source/core/Ray.cpp
+    source/integrators/MonteCarloIntegrator.cpp
+    source/core/Scene.cpp
+    source/core/Primitive.cpp
     source/shapes/Shape.cpp
     source/shapes/Sphere.cpp
     source/accelerators/Aggregate.cpp
