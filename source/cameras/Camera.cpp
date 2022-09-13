@@ -20,6 +20,8 @@ void Camera::updateVectors()
 
 void Camera::GUI()
 {
+	ImGui::NewLine();
+	ImGui::Text("CAMERA");
 	int changed = 0;
 	changed += ImGui::SliderInt("Samples/Pixel", &samples_, 1, 10);
 	changed += ImGui::SliderFloat3("Camera position", &position_.x, -10, 10);

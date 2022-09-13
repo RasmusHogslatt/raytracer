@@ -12,7 +12,7 @@ public:
 
 	void setPixelColor(size_t x, size_t y, ImVec4 color);
 
-	void clearTextureColor(ImVec4 color = ImVec4(0.3,0.3,0.3,1));
+	void clearTextureColor(ImVec4 color = ImVec4(0.3f,0.3f,0.3f,1.0f));
 
 	void createTexture(size_t width = 1920, size_t height = 1080);
 

@@ -2,15 +2,17 @@
 
 #include <materials/Material.h>
 #include <core/Ray.h>
+#include <shapes/Shape.h>
 
 class Primitive {
 public:
-	Primitive(Material* material = new Material());
+	Primitive(Material* material = new Material(), Shape* shape = nullptr);
 	Primitive(const Primitive& old);
+	Primitive* clone() const;
 	virtual ~Primitive();
-	// Checks for intersection. If found, sets ray.origin to intersection point
-	virtual bool intersect(Ray& r) = 0;
-	virtual void GUI() = 0;
+
+	void GUI();
 public:
 	Material* material_;
+	Shape* shape_;
 };

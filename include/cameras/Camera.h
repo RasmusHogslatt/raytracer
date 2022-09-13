@@ -4,7 +4,7 @@
 
 class Camera {
 public:
-	Camera(glm::vec3 position = glm::vec3(0, 0, 8), glm::vec3 front = glm::vec3(0, 0, -1), glm::vec3 up = glm::vec3(0, 1, 0), glm::ivec2 resolution = glm::ivec2(1920, 1080), int samples = 1, float fov = 55);
+	Camera(glm::vec3 position = glm::vec3(0, 0, 6), glm::vec3 front = glm::vec3(0, 0, -1), glm::vec3 up = glm::vec3(0, 1, 0), glm::ivec2 resolution = glm::ivec2(1920, 1080), int samples = 1, float fov = 55);
 
 	void updateVectors();
 

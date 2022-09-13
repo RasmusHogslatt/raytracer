@@ -11,9 +11,7 @@
 #include <vector>
 #include <functional>
 #include <iostream>
-#include <core/Parameters.h>
 #include <integrators/Integrator.h>
-#include <core/GUI.h>
 #include <glm/glm.hpp>
 #include <core/Scene.h>
 

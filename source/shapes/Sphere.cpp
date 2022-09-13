@@ -4,19 +4,28 @@
 #include <imgui.h>
 #include <glm/gtx/rotate_vector.hpp>
 
-Sphere::Sphere(glm::vec3 position, float radius) : Primitive(), position_{ position }, radius_{ radius } {}
+Sphere::Sphere(glm::vec3 position, float radius) : Shape(), position_{ position }, radius_{ radius }, area_{ getArea() } {}
 
 Sphere::Sphere(const Sphere& old) {
-	material_ = old.material_;
 	position_ = old.position_;
 	radius_ = old.radius_;
+	area_ = old.area_;
 }
 
-bool Sphere::intersect(Ray& ray)
+Sphere* Sphere::clone() const
+{
+	return new Sphere(*this);
+}
+
+Sphere::~Sphere()
+{
+}
+
+bool Sphere::intersect(Ray& ray, float& t)
 {
 	float pHalf = glm::dot((ray.origin_ - position_), ray.direction_);
 	float toSquare = pow(pHalf, 2.0f) + pow(radius_, 2.0f) - pow(glm::length(ray.origin_ - position_), 2.0f);
-	float t;
+	
 	glm::vec3 normal;
 
 	// No intersection
@@ -25,7 +34,7 @@ bool Sphere::intersect(Ray& ray)
 	}
 	// One or two intersections
 	else {
-		t = -pHalf + sqrt(toSquare);
+		t = -pHalf - sqrt(toSquare);
 		//Inside sphere
 		if (t < 0) {
 			t = -pHalf + sqrt(toSquare);
@@ -35,11 +44,24 @@ bool Sphere::intersect(Ray& ray)
 
 	// t positive required to travel forward in scene
 	if (t >= 0) {
-		// Update origin to intersection point
-		ray.origin_ = ray.origin_ + ray.direction_ * t;
 		return true;
 	}
 	return false;
+}
+
+glm::vec3 Sphere::getPosition()
+{
+	return position_;
+}
+
+float Sphere::getArea()
+{
+	return radius_ * radius_ * 3.14f * 4.0f;
+}
+
+glm::vec3 Sphere::getNormal(const glm::vec3& intersectionPoint)
+{
+	return glm::normalize(intersectionPoint - position_);
 }
 
 glm::vec3 Sphere::getPointOnHemisphere(float u, float v) const
@@ -62,8 +84,9 @@ glm::vec3 Sphere::getPointOnHemisphere(float u, float v) const
 void Sphere::GUI()
 {
 	ImGui::Text("Shape: SPHERE");
-	ImGui::SliderFloat3("Sphere position", &position_.x, -10.0f, 10.0f);
-	ImGui::SliderFloat("Radius", &radius_, 0.1f, 10.0f);
+	ImGui::PushID(ImGui::SliderFloat3("Sphere position", &position_.x, -10.0f, 10.0f));
+	if (ImGui::SliderFloat("Radius", &radius_, 0.1f, 10.0f)) {
+		area_ = getArea();
+	}
 	ImGui::NewLine();
-	material_->GUI();
 }
