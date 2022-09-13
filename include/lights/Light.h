@@ -1,19 +1,16 @@
 #pragma once
 
-#include <Actor.h>
+#include <shapes/Shape.h>
 
-struct LightProperties {
-	glm::vec3 color = glm::vec3(1,1,1);
-	float intensity = 1.0f;
-};
-
-class Light : public Actor {
+class Light {
 public:
-	Light();
+	Light(Shape* shape = nullptr);
 	Light(const Light& old);
-
-	void GUISettings();
-
+	Light* clone() const;
+	virtual ~Light();
+	void GUI();
+	float getRadiosity();
 public:
-	LightProperties lightProperties_;
+	Shape* shape_;
+	float flux_;
 };

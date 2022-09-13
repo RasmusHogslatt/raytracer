@@ -1,7 +1,6 @@
 #pragma once
 
 #include <samplers/Sampler.h>
-#include <cameras/Camera.h>
 
 class CenterSampler : public Sampler {
 public:

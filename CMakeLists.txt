@@ -19,19 +19,16 @@ find_package(OpenGL REQUIRED)
 add_subdirectory(external)
 
 set(HEADER_FILES
-	include/App.h
-    include/Actor.h
-    include/Texture.h
-    include/Object.h
-    include/Window.h
-    include/GUI.h
-    include/Ray.h
-    include/DebugRenderer.h
-    include/Parameters.h
-    include/Scene.h
+	include/core/App.h
+    include/core/Texture.h
+    include/core/Ray.h
+    include/core/Scene.h
+    include/core/Primitive.h
     include/shapes/Shape.h
     include/shapes/Sphere.h
-    include/accelerators/Aggregate.h
+    include/shapes/Polygon.h
+    include/shapes/Triangle.h
+    include/shapes/Rectangle.h
     include/cameras/Camera.h
     include/cameras/PerspectiveCamera.h
     include/cameras/OrthographicCamera.h
@@ -40,23 +37,23 @@ set(HEADER_FILES
     include/samplers/RandomSampler.h
     include/materials/Material.h
     include/lights/Light.h
+    include/lights/SphereLight.h
     include/integrators/Integrator.h
+    include/integrators/MonteCarloIntegrator.h
 )
 
 set(SOURCE_FILES
     main.cpp
-    source/App.cpp
-    source/Actor.cpp
-    source/Texture.cpp
-    source/Object.cpp
-    source/Window.cpp
-    source/GUI.cpp
-    source/Ray.cpp
-    source/DebugRenderer.cpp
-    source/Scene.cpp
+    source/core/App.cpp
+    source/core/Texture.cpp
+    source/core/Ray.cpp
+    source/core/Scene.cpp
+    source/core/Primitive.cpp
     source/shapes/Shape.cpp
     source/shapes/Sphere.cpp
-    source/accelerators/Aggregate.cpp
+    source/shapes/Polygon.cpp
+    source/shapes/Triangle.cpp
+    source/shapes/Rectangle.cpp
     source/cameras/Camera.cpp
     source/cameras/PerspectiveCamera.cpp
     source/cameras/OrthographicCamera.cpp
@@ -65,7 +62,9 @@ set(SOURCE_FILES
     source/samplers/RandomSampler.cpp
     source/materials/Material.cpp
     source/lights/Light.cpp
+    source/lights/SphereLight.cpp
     source/integrators/Integrator.cpp
+    source/integrators/MonteCarloIntegrator.cpp
 )
 
 # Add header with path to resources and add header to include directory

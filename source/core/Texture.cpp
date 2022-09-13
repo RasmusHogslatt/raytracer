@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Texture.h"
+#include <core/Texture.h>
 #include <iostream>
 #include <stb_image_write.h>
 
@@ -96,5 +96,5 @@ void Texture::setData(unsigned char* newData) {
 
 void Texture::exportPNG(const std::string& filename, int compression)
 {
-	stbi_write_png(("../"+filename + ".png").c_str(), width_, height_, compression, data_, width_ * 4);
+	stbi_write_png(("../"+filename + ".png").c_str(), static_cast<int>(width_), static_cast<int>(height_), compression, data_, static_cast<int>(width_) * 4);
 }
