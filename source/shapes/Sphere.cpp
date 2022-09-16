@@ -44,6 +44,8 @@ bool Sphere::intersect(Ray& ray, float& t)
 
 	// t positive required to travel forward in scene
 	if (t >= 0) {
+		ray.setEnd(t);
+		ray.intersectionNormal_ = getNormal(ray.end_);
 		return true;
 	}
 	return false;
@@ -62,6 +64,23 @@ float Sphere::getArea()
 glm::vec3 Sphere::getNormal(const glm::vec3& intersectionPoint)
 {
 	return glm::normalize(intersectionPoint - position_);
+}
+
+glm::vec3 Sphere::getPointOnSurface(const glm::vec3& normal, float u, float v)
+{
+	float inclination = glm::acos(1 - 2 * u);
+	float azimuth = 2.0f * 3.14f * v;
+	glm::vec3 randomDirection = normal;
+
+	randomDirection = glm::normalize(glm::rotate(
+		randomDirection,
+		inclination,
+		glm::vec3(0, 1, 0)));
+	randomDirection = glm::normalize(glm::rotate(
+		randomDirection,
+		azimuth,
+		glm::vec3(1, 0, 0)));
+	return position_ + randomDirection * radius_;
 }
 
 glm::vec3 Sphere::getPointOnHemisphere(float u, float v) const

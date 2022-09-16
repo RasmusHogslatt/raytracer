@@ -8,8 +8,10 @@ public:
 	~Material();
 	Material(const Material& old);
 	Material* clone() const;
-	void GUI();
+	virtual void GUI();
 public:
 	glm::vec3 color_;
 	float reflectance_;
+	float transmittance_;
+	float ior_;
 };

@@ -17,4 +17,5 @@ public:
 	virtual glm::vec3 getNormal(const glm::vec3& intersectionPoint) = 0;
 	virtual float getArea() = 0;
 	virtual void GUI();
+	virtual glm::vec3 getPointOnSurface(const glm::vec3& normal, float u, float v) = 0;
 };

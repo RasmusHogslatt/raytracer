@@ -15,6 +15,7 @@ public:
 	// Mean position of vertices
 	glm::vec3 getPosition();
 	glm::vec3 getNormal(const glm::vec3& intersectionPoint);
+	glm::vec3 getPointOnSurface(const glm::vec3& normal, float u, float v);
 	float getArea();
 	void GUI();
 public:

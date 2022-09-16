@@ -18,6 +18,7 @@ public:
 	glm::vec3 getPosition();
 	float getArea();
 	glm::vec3 getNormal(const glm::vec3& intersectionPoint);
+	glm::vec3 getPointOnSurface(const glm::vec3& normal, float u, float v);
 	glm::vec3 getPointOnHemisphere(float u, float v) const;
 	void GUI();
 public:

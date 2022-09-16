@@ -16,9 +16,14 @@ public:
 
 	// Returns direction inside hemisphere. Takes two random floats [0, 1]
 	glm::vec3 uniformSampleHemisphere(const glm::vec3& normal, const float& r1, const float& r2);
+
+	glm::vec3 directLight(const Ray& ray);
+	glm::vec3 indirectLight(const Ray& ray, int& depth);
+	glm::vec3 traverseTree(const Ray& root);
 public:
 	int maxRecursiveDepth_;
 	int samplerPerPixel_;
 	float bias_;
-	int nHemisphereSamples_;
+	int indirectLightSamplesOnHemisphere_;
+	int lightSamples_;
 };

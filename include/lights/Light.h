@@ -9,6 +9,7 @@ public:
 	Light* clone() const;
 	virtual ~Light();
 	void GUI();
+	// Returns point on visible part of area light
 	float getRadiosity();
 public:
 	Shape* shape_;
