@@ -9,15 +9,17 @@
 #include <shapes/Triangle.h>
 #include <shapes/Rectangle.h>
 
-Scene::Scene() : activeCamera_{ 0 }, activeSampler_{ 0 }, activePrimitive_{ 0 }, activeLight_{ 0 }, dummySphere_{ Primitive() }, dummyTriangle_{ Primitive() }, dummyRectangle_{ Primitive() }, dummySphereLight_{ SphereLight() } {
-	dummySphere_.shape_ = new Sphere();
-	dummyTriangle_.shape_ = new Triangle();
-	dummyRectangle_.shape_ = new Rectangle();
+Scene::Scene() : activeCamera_{ 0 }, activeSampler_{ 0 }, activePrimitive_{ 0 }, activeLight_{ 0 }, dummySphere_{ Primitive() }, dummyTriangle_{ Primitive() }, dummyRectangle_{ Primitive() }, dummySphereLight_{ SphereLight() }, activeMaterial_{ 0 } {
+	materials_.push_back(new Lambertian());
+	materials_.push_back(new Mirror());
+	materials_.push_back(new Glass());
+	dummySphere_.shape_ = new Sphere(); dummySphere_.material_ = materials_[activeMaterial_];
+	dummyTriangle_.shape_ = new Triangle(); dummyTriangle_.material_ = materials_[activeMaterial_];
+	dummyRectangle_.shape_ = new Rectangle(); dummyRectangle_.material_ = materials_[activeMaterial_];
 	dummySphereLight_.shape_ = new Sphere();
 	// Add primitives
 
 	// Add lights
-
 
 	// Add cameras
 	cameras_.push_back(new PerspectiveCamera());
@@ -34,6 +36,7 @@ void Scene::GUI()
 	ImGui::SliderInt("Light type", &activeLight_, 0, 0);
 	ImGui::SliderInt("Camera type", &activeCamera_, 0, 0);
 	ImGui::SliderInt("Sampler type", &activeSampler_, 0, 0);
+	ImGui::SliderInt("Material type", &activeMaterial_, 0, 2);
 
 	cameras_[activeCamera_]->GUI();
 	samplers_[activeSampler_]->GUI();
@@ -57,15 +60,20 @@ void Scene::GUI()
 		// add point light
 	}
 
+	materials_[activeMaterial_]->GUI();
+
 	if (ImGui::Button("Add primitive")) {
 
 		if (activePrimitive_ == 0) {
+			dummySphere_.material_ = materials_[activeMaterial_]->clone();
 			primitives_.push_back(dummySphere_.clone());
 		}
 		else if (activePrimitive_ == 1) {
+			dummyTriangle_.material_ = materials_[activeMaterial_]->clone();
 			primitives_.push_back(dummyTriangle_.clone());
 		}
 		else if (activePrimitive_ == 2) {
+			dummyRectangle_.material_ = materials_[activeMaterial_]->clone();
 			primitives_.push_back(dummyRectangle_.clone());
 		}
 	}
@@ -78,19 +86,19 @@ void Scene::GUI()
 
 void Scene::loadRoom()
 {
-	// 3 balls
-	Sphere diffuse = Sphere(glm::vec3(0, 0, 0), 0.5f);
-	Sphere reflective = Sphere(glm::vec3(1.1, 0, 0), 0.5f);
-	Sphere transmissive = Sphere(glm::vec3(-1.1, 0, 0), 0.5f);
-	Material b1 = Material(); b1.color_ = glm::vec3(0, 0.5f, 1.0f);
-	Material b2 = Material(); b2.reflectance_ = 1.0f; b2.transmittance_ = 0.0f; b2.color_ = glm::vec3(1);
-	Material b3 = Material(); b3.transmittance_ = 1.0f;
-	Primitive pb1 = Primitive(&b1, &diffuse);
-	Primitive pb2 = Primitive(&b2, &reflective);
-	Primitive pb3 = Primitive(&b3, &transmissive);
-	primitives_.push_back(pb1.clone());
-	primitives_.push_back(pb2.clone());
-	primitives_.push_back(pb3.clone());
+	//// 3 balls
+	//Sphere diffuse = Sphere(glm::vec3(0, 0, 0), 0.5f);
+	//Sphere reflective = Sphere(glm::vec3(1.1, 0, 0), 0.5f);
+	//Sphere transmissive = Sphere(glm::vec3(-1.1, 0, 0), 0.5f);
+	//Lambertian b1 = Lambertian();
+	//Mirror b2 = Mirror();
+	//Glass b3 = Glass();
+	//Primitive pb1 = Primitive(&b1, &diffuse);
+	//Primitive pb2 = Primitive(&b2, &reflective);
+	//Primitive pb3 = Primitive(&b3, &transmissive);
+	//primitives_.push_back(pb1.clone());
+	//primitives_.push_back(pb2.clone());
+	//primitives_.push_back(pb3.clone());
 
 	// Shapes
 	Rectangle roof = Rectangle(glm::vec3(6, 5, 8), glm::vec3(6, 5, -8), glm::vec3(-6, 5, -8));
@@ -103,14 +111,14 @@ void Scene::loadRoom()
 	Rectangle frontWall2 = Rectangle(glm::vec3(0, -5, -8), glm::vec3(0, 5, -8), glm::vec3(6, 5, -5));
 
 	// Materials
-	Material m1 = Material();
-	Material m2 = Material();
-	Material m3 = Material();
-	Material m4 = Material();
-	Material m5 = Material();
-	Material m6 = Material();
-	Material m7 = Material();
-	Material m8 = Material();
+	Lambertian m1 = Lambertian();
+	Lambertian m2 = Lambertian();
+	Lambertian m3 = Lambertian();
+	Lambertian m4 = Lambertian();
+	Lambertian m5 = Lambertian();
+	Lambertian m6 = Lambertian();
+	Lambertian m7 = Lambertian();
+	Lambertian m8 = Lambertian();
 
 	//Primitives
 	Primitive p1;

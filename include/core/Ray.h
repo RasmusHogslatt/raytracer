@@ -19,4 +19,5 @@ public:
 	std::shared_ptr<Ray> parent_;
 	std::shared_ptr<Ray> reflected_;
 	std::shared_ptr<Ray> refracted_;
+	bool inside_;
 };

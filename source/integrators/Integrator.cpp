@@ -23,28 +23,31 @@ glm::vec3 Integrator::getRefractionDirection(const glm::vec3& incident, const gl
 
 	float cosi = glm::clamp(glm::dot(incident, normal), -1.0f, 1.0f);
 
+	//	Outside
 	if (cosi < 0.0f) {
 		cosi = -cosi;
 	}
+	// Inside
 	else {
 		std::swap(innerIOR, globalIOR);
 		n = -normal;
 	}
 	float resultingIOR = innerIOR / globalIOR;
-	float k = (1.0f - resultingIOR * resultingIOR) * (1.0f - cosi * cosi);
+	float k = 1.0f - resultingIOR * resultingIOR * (1.0f - cosi * cosi);
 
+	// Total internal reflection
 	if (k < 0.0f) {
 		return glm::vec3(0);
 	}
 	else {
-		return (resultingIOR * incident + (resultingIOR * cosi - std::sqrt(k)) * n);
+		return glm::normalize(resultingIOR * incident + (resultingIOR * cosi - std::sqrt(k)) * n);
 	}
 }
 
 float Integrator::fresnel(const glm::vec3& incident, const glm::vec3& normal, float ior)
 {
 	float kr = 0.0f;
-		float cosi = glm::clamp(glm::dot(incident, normal), -1.0f, 1.0f);
+	float cosi = glm::clamp(glm::dot(incident, normal), -1.0f, 1.0f);
 	float innerIOR = ior;
 	float globalIOR = globalIOR_;
 
@@ -66,4 +69,11 @@ float Integrator::fresnel(const glm::vec3& incident, const glm::vec3& normal, fl
 		kr = (Rs * Rs + Rp * Rp) / 2.0f;
 		return kr;
 	}
+}
+
+float Integrator::schlick(const glm::vec3& incident, const glm::vec3& normal, float etai, float etat)
+{
+	float cosTheta = glm::dot(incident, normal);
+	float r0 = std::pow(((etat - etai) / (etat + etai)), 2);
+	return r0 + (1.0f - r0) * std::pow((1.0f - cosTheta), 5);
 }

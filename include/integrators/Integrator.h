@@ -14,7 +14,7 @@ public:
 
 	// Returns amount of reflection Kr. Transmittance Kt is given by Kt = 1 - Kr
 	float fresnel(const glm::vec3& incident, const glm::vec3& normal, float ior);
-
+	float schlick(const glm::vec3& incident, const glm::vec3& normal, float etai, float etat);
 public:
 	Scene* scene_;
 	float globalIOR_;

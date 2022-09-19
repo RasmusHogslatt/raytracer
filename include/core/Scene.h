@@ -30,13 +30,14 @@ public:
 	std::vector<Light*> lights_;
 	std::vector<Camera*> cameras_;
 	std::vector<Sampler*> samplers_;
-
+	std::vector<Material*> materials_;
 
 
 	int activeCamera_;
 	int activeSampler_;
 	int activePrimitive_;
 	int activeLight_;
+	int activeMaterial_;
 
 	Primitive dummySphere_;
 	Primitive dummyTriangle_;

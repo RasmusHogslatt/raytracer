@@ -26,4 +26,5 @@ public:
 	float bias_;
 	int indirectLightSamplesOnHemisphere_;
 	int lightSamples_;
+	int progress_;
 };

@@ -23,32 +23,59 @@ Sphere::~Sphere()
 
 bool Sphere::intersect(Ray& ray, float& t)
 {
-	float pHalf = glm::dot((ray.origin_ - position_), ray.direction_);
-	float toSquare = pow(pHalf, 2.0f) + pow(radius_, 2.0f) - pow(glm::length(ray.origin_ - position_), 2.0f);
-	
-	glm::vec3 normal;
-
-	// No intersection
-	if (toSquare < 0) {
+	glm::vec3 L = position_ - ray.origin_;
+	float tca = glm::dot(L, ray.direction_);
+	float d2 = glm::dot(L, L) - tca * tca;
+	if (d2 > radius_ * radius_) {
 		return false;
 	}
-	// One or two intersections
-	else {
-		t = -pHalf - sqrt(toSquare);
-		//Inside sphere
-		if (t < 0) {
-			t = -pHalf + sqrt(toSquare);
-		}
-		normal = ray.origin_ + t * ray.direction_ - position_;
-	}
+	float thc = sqrt(radius_ * radius_ - d2);
+	float t0 = tca - thc;
+	float t1 = tca + thc;
 
-	// t positive required to travel forward in scene
-	if (t >= 0) {
-		ray.setEnd(t);
-		ray.intersectionNormal_ = getNormal(ray.end_);
-		return true;
+	// Order solutions
+	if (t0 > t1) {
+		std::swap(t0, t1);
 	}
-	return false;
+	ray.inside_ = false;
+	// First hit is behind ray origin -> ray is inside sphere
+	if (t0 < 0.0f) {
+		t0 = t1;
+		ray.inside_ = true;
+
+		// Second hit is also behind ray origin -> ray is outside sphere
+		if (t0 < 0.0f) {
+			return false;
+		}
+	}
+	t = t0;
+
+	ray.setEnd(t);
+	ray.intersectionNormal_ = getNormal(ray.end_);
+	return true;
+	//float pHalf = glm::dot((ray.origin_ - position_), ray.direction_);
+	//float toSquare = pow(pHalf, 2.0f) + pow(radius_, 2.0f) - pow(glm::length(ray.origin_ - position_), 2.0f);
+
+	//// No intersection
+	//if (toSquare < 0.0f) {
+	//	return false;
+	//}
+	//// One or two intersections
+	//else {
+	//	t = -pHalf - sqrt(toSquare);
+	//	//Inside sphere
+	//	if (t < 0.0f) {
+	//		t = -pHalf + sqrt(toSquare);
+	//	}
+	//}
+
+	//// t positive required to travel forward in scene
+	//if (t >= 0.0f) {
+	//	ray.setEnd(t);
+	//	ray.intersectionNormal_ = getNormal(ray.end_);
+	//	return true;
+	//}
+	//return false;
 }
 
 glm::vec3 Sphere::getPosition()
@@ -103,7 +130,7 @@ glm::vec3 Sphere::getPointOnHemisphere(float u, float v) const
 void Sphere::GUI()
 {
 	ImGui::Text("Shape: SPHERE");
-	ImGui::PushID(ImGui::SliderFloat3("Sphere position", &position_.x, -10.0f, 10.0f));
+	ImGui::SliderFloat3("Sphere position", &position_.x, -10.0f, 10.0f);
 	if (ImGui::SliderFloat("Radius", &radius_, 0.1f, 10.0f)) {
 		area_ = getArea();
 	}

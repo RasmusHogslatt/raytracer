@@ -6,7 +6,7 @@
 class Shape {
 public:
 	Shape();
-	Shape(const Shape& old);
+	
 	virtual Shape* clone() const = 0;
 	virtual ~Shape();
 	// True if intersected, sets ray.end = intersection point

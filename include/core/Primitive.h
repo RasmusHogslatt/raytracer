@@ -6,7 +6,7 @@
 
 class Primitive {
 public:
-	Primitive(Material* material = new Material(), Shape* shape = nullptr);
+	Primitive(Material* material = new Lambertian(), Shape* shape = nullptr);
 	Primitive(const Primitive& old);
 	Primitive* clone() const;
 	virtual ~Primitive();
