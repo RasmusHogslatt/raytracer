@@ -17,7 +17,7 @@ Light* Light::clone() const
 
 Light::~Light()
 {
-	delete shape_;
+	
 	shape_ = nullptr;
 }
 

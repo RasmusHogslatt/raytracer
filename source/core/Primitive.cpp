@@ -7,6 +7,7 @@
 Primitive::Primitive(Material* material, Shape* shape) : material_{ material }, shape_{ shape } {}
 
 Primitive::Primitive(const Primitive& old) {
+	material_ = nullptr;
 	material_ = old.material_->clone();
 	shape_ = old.shape_->clone();
 }
@@ -23,5 +24,5 @@ void Primitive::GUI()
 	ImGui::NewLine();
 	ImGui::Text("PRIMITIVES");
 	shape_->GUI();
-	material_->GUI();
+	//material_->GUI();
 }

@@ -5,9 +5,7 @@
 
 Shape::Shape() {}
 
-Shape::Shape(const Shape& old)
-{
-}
+
 
 Shape::~Shape()
 {

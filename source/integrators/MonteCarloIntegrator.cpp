@@ -4,11 +4,15 @@
 #include <iostream>
 #include <random>
 #include <string>
+#include <memory>
+#include <imgui.h>
+#include <glm/geometric.hpp>
+#include <cmath>
 
 std::default_random_engine generator;
 std::uniform_real_distribution<float> distribution(0, 1);
 
-MonteCarloIntegrator::MonteCarloIntegrator(Scene* scene) : Integrator(scene), maxRecursiveDepth_{ 1 }, samplerPerPixel_{ 1 }, bias_{ 0.001f }, nHemisphereSamples_{ 5 } {}
+MonteCarloIntegrator::MonteCarloIntegrator(Scene* scene) : Integrator(scene), maxRecursiveDepth_{ 1 }, samplerPerPixel_{ 1 }, bias_{ 0.1f }, indirectLightSamplesOnHemisphere_{ 1 }, lightSamples_{ 1 }, progress_{ 0 } {}
 
 void MonteCarloIntegrator::Integrate(Texture& renderTexture) {
 	glm::ivec2 resolution = scene_->cameras_[scene_->activeCamera_]->resolution_;
@@ -20,154 +24,138 @@ void MonteCarloIntegrator::Integrate(Texture& renderTexture) {
 
 	for (int y = 0; y < resolution.y; ++y) {
 		for (int x = 0; x < resolution.x; ++x) {
-			color = glm::vec3(0);
 
+			progress_++;
+			//ImGui::ProgressBar(static_cast<float>(progress_) / static_cast<float>(1920 * 1080), ImVec2(0, 0), "s");
+			color = glm::vec3(0);
 			for (currentSample = 0; currentSample < samplerPerPixel_; ++currentSample) {
 				samplePosition = scene_->samplers_[scene_->activeSampler_]->getSamplePosition(x, y, *scene_->cameras_[scene_->activeCamera_], currentSample);
 				ray = scene_->cameras_[scene_->activeCamera_]->generateRay(samplePosition);
-
-				color = traceRay(ray, 0);
-
-				/*
-				1. getNearestIntersectedObject()
-				2. store intersection
-				3. store normal
-				4. castRay(position, normal, object*, depth)
-				*/
-
-				/*if (scene_->primitives_[0]->shape_->intersect(ray)) {
-					color = scene_->primitives_[0]->material_->diffuse_;
-					glm::vec3 intersectionPoint = ray.origin_;
-					glm::vec3 normal = scene_->primitives_[0]->shape_->getNormal(intersectionPoint);
-				}*/
-				//trace
-
-				// monte carlo
-				/*
-					1 - If hit object
-						--- GATHERLIGHT START ---
-						for(x amountOfRaySamples)
-							randomDirection = getrandomdirection(normalvectorOfHitPointOnObject)
-							Ray ray;
-							ray.origin = intersectionPoint
-							ray.direction = randomDirection
-							indirectLight += traceRay(ray) // traceRay first calculates direct illumination, then use gather light after and returns sum of both
-						end
-						indirectLight /= amountOfRaySamples
-						--- GATHERLIGHT END ---
-				*/
+				ray.depth_ = 0;
+				ray.parent_ = nullptr;
+				color = traceRay(ray);
 			}
-
+			//color = traverseTree(ray);
 			renderTexture.setPixelColor(x, y, ImVec4(color.r, color.g, color.b, 1.0f));
 		}
 	}
 	renderTexture.updateTextureData();
 }
 
-glm::vec3 MonteCarloIntegrator::traceRay(Ray& r, int depth) {
+glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 	// Terminate recursion
-	glm::vec3 hitColor = glm::vec3(0);
-	glm::vec3 directColor = glm::vec3(0);
-	glm::vec3 indirectColor = glm::vec3(0);
-	if (depth > maxRecursiveDepth_) {
+	if (r.depth_ > maxRecursiveDepth_) {
+		r.reflected_ = nullptr;
+		r.refracted_ = nullptr;
 		return glm::vec3(0);
 	}
 
-	// Get nearest object
+	glm::vec3 finalColor = glm::vec3(0);
+	glm::vec3 directColor = glm::vec3(0);
+	glm::vec3 indirectColor = glm::vec3(0);
+	glm::vec3 reflectedColor = glm::vec3(0);
+	glm::vec3 refractedColor = glm::vec3(0);
+
+
+	// Get closest intersected object
 	float distance = 0.0f;
 	int objectIndex = getNearestIntersectionIndex(r, distance, 0);
+
+
+	// Intersection found
 	if (objectIndex != -1) {
-		// Easy access to object
-		Primitive* object = scene_->primitives_[objectIndex];
-		Material* m = object->material_;
+		r.material_ = scene_->primitives_[objectIndex]->material_;
+		r.end_ = r.origin_ + r.direction_ * distance;
+		r.intersectionNormal_ = scene_->primitives_[objectIndex]->shape_->getNormal(r.end_); // Normalized
 
-		// Get intersection point, normal and 
-		glm::vec3 intersectionPoint = r.origin_ + distance * r.direction_;
-		glm::vec3 normal = object->shape_->getNormal(intersectionPoint);
-		glm::vec3 offsetOrigin = intersectionPoint + normal * bias_;
-		//r.origin_ = offsetOrigin;
+		if (glm::dot(r.direction_, r.intersectionNormal_) < 0.0f) {
+			r.inside_ = false;
+		}
+		else {
+			r.inside_ = true;
+		}
 
-		// Direct lighting
-		for (int i = 0; i < scene_->lights_.size(); ++i) {
-			Light* light = scene_->lights_[i];
-			for (int lightSamples = 0; lightSamples < 10; ++lightSamples) {
-
-				float r1 = distribution(generator);
-				float r2 = distribution(generator);
-				glm::vec3 pointOnLightHemisphere = uniformSampleHemisphere(glm::normalize(intersectionPoint - light->shape_->getPosition()), r1, r2);
-				glm::vec3 lightDirection = glm::normalize(intersectionPoint - pointOnLightHemisphere);
-				Ray lightRay = Ray(offsetOrigin, lightDirection);
-				float x;
-				if (object->shape_->intersect(lightRay, x)) {
-					directColor += m->color_ * (1.0f - m->reflectance_) * std::max(glm::dot(-lightDirection, normal), 0.0f) / 5.0f;
+		switch (r.material_->id_) {
+		case 0: {
+			if (/*!r.inside_*/1) {
+				directColor += directLight(r);
+				//indirectColor += indirectLight(r);
+				finalColor += (directColor / 3.14f + 2.0f * indirectColor);
+			}
+			break;
+		}
+		case 1: {
+			if (r.depth_ + 1 <= maxRecursiveDepth_) {
+				glm::vec3 intersectionOffset = r.end_ + r.intersectionNormal_ * bias_;
+				glm::vec3 direction = glm::reflect(r.direction_, r.intersectionNormal_);
+				Ray reflectedRay(intersectionOffset, direction, r.depth_ + 1, std::make_shared<Ray>(r));
+				reflectedColor += traceRay(reflectedRay);
+				finalColor += reflectedColor;
+			}
+			break;
+		}
+		case 2: {
+			if (r.depth_ + 1 <= maxRecursiveDepth_) {
+				// Calculate new ray origins with offset + ratio of ior
+				float sign = 1.0f;
+				float n1 = globalIOR_;
+				float n2 = r.material_->ior_;
+				if (r.inside_) {
+					sign = -1.0f;
+					std::swap(n1, n2);
 				}
+				else {
+
+				}
+				float eta = n1 / n2;
+				glm::vec3 reflectedOrigin = r.end_ + r.intersectionNormal_ * bias_ * sign;
+				glm::vec3 refractedOrigin = r.end_ - r.intersectionNormal_ * bias_ * sign;
+
+				// Reflective coefficient -> inside outside handled by fresnel
+				float reflectiveCoefficient = fresnel(r.direction_, r.intersectionNormal_, n1, n2);
+
+				// Calculate refracted ray
+				bool TIR = false;
+				if (reflectiveCoefficient < 1.0f) {
+					glm::vec3 refractedDirection = getRefractionDirection(r.direction_, r.intersectionNormal_, n1, n2, TIR);
+					if (!TIR) {
+
+						Ray refractedRay(refractedOrigin, refractedDirection, r.depth_ + 1, std::make_shared<Ray>(r));
+						if (r.inside_) {
+							refractedRay.inside_ = false;
+						}
+						else {
+							refractedRay.inside_ = true;
+						}
+						r.refracted_ = std::make_shared<Ray>(refractedRay);
+						refractedColor += traceRay(refractedRay) * (1.0f - reflectiveCoefficient);
+					}
+				}
+
+				// Calculate reflected ray
+				glm::vec3 reflectedDirection = glm::reflect(r.direction_, r.intersectionNormal_);
+				Ray reflectedRay(reflectedOrigin, reflectedDirection, r.depth_ + 1, std::make_shared<Ray>(r));
+				r.reflected_ = std::make_shared<Ray>(reflectedRay);
+				if (r.inside_) {
+					reflectedRay.inside_ = true;
+				}
+				else {
+					reflectedRay.inside_ = false;
+				}
+				reflectedColor += traceRay(reflectedRay) * reflectiveCoefficient;
+
+				// Add colors
+				finalColor += refractedColor + reflectedColor;
+				//finalColor = glm::vec3(reflectiveCoefficient);
 			}
-			if (m->reflectance_ > FLT_EPSILON) {
-				glm::vec3 reflectionDirection = getReflectionDirection(r.direction_, normal);
-				Ray refRay = Ray(offsetOrigin, reflectionDirection);
-				directColor += m->reflectance_ * traceRay(refRay, ++depth) * std::max(glm::dot(reflectionDirection, normal), 0.0f);
-
-			}
+			break;
 		}
-
-		float pdf = 1.0f / (2.0f * 3.14f); // PDF = probability to sample specific direction in solid angle (current is hardcoded for full hemisphere)
-		for (int n = 0; n < nHemisphereSamples_; ++n) {
-			float r1 = distribution(generator);
-			float r2 = distribution(generator);
-
-			glm::vec3 sampleDirection = uniformSampleHemisphere(normal, r1, r2);
-			Ray indirectRay = Ray(offsetOrigin, sampleDirection);
-			// Trace indirect ray and adjust for incoming angle and propbability of specific ray
-			indirectColor += traceRay(indirectRay, ++depth) * std::max(glm::dot(indirectRay.direction_, normal), 0.0f) / pdf;
+		default:
+			std::cout << r.material_->id_ << "\n";
+			break;
 		}
-		indirectColor /= static_cast<float>(nHemisphereSamples_);
+		return glm::clamp(finalColor, 0.0f, 1.0f);
 	}
-
-
-
-
-	// DEBUG
-	hitColor = (directColor / 3.14f + 2.0f * indirectColor);
-	//return glm::clamp(glm::vec3(distance/20.0f), 0.0f, 1.0f);// Sphere intersection is picking furthest point
-	return glm::clamp(hitColor, 0.0f, 1.0f);
-
-	/*
-	vec3f castRay(Vec2f P, Vec2f N, uin32_t depth) {
-	if (depth > scene->options.maxDepth) return 0;
-	Vec2f N = ..., P = ...;  //normal and position of the shaded point
-	Vec3f directLightContrib = 0, indirectLightContrib = 0;
-
-	// compute direct illumination
-	for (uint32_t i = 0; i < scene->nlights; ++i) {
-		Vec2f L = scene->lights[i].getLightDirection(P);
-		Vec3f L_i = scene->lights[i]->intensity * scene->lights[i]->color;
-		// we assume the surface at P is diffuse
-		directLightContrib += shadowRay(P, -L) * std::max(0.f, N.dotProduct(L)) * L_i;
-	}
-
-	// compute indirect illumination
-	float rotMat[2][2] = {{N.y, -N.x}, {N.x, N.y}};  //compute a rotation matrix
-	uint32_t N = 16;
-	for (uint32_t n = 0; n < N; ++n) {
-		// step 1: draw a random sample in the half-disk
-		float theta = drand48() * M_PI;
-		float cosTheta = cos(theta);
-		float sinTheta = sin(theta);
-		// step 2: rotate the sample direction
-		float sx = cosTheta  * rotMat[0][0] + sinTheta  * rotMat[0][1];
-		float sy = cosTheta  * rotMat[1][0] + sinTheta  * rotMat[1][1];
-		// step 3: cast the ray into the scene
-		Vec3f sampleColor = castRay(P, Vec2f(sx, sy), depth + 1);  //trace a ray from P in random direction
-		// step 4 and 5: treat the return color as if it was a light (we assume our shaded surface is diffuse)
-		IndirectLightContrib += sampleColor * cosTheta;  //diffuse shading = L_i * cos(N.L)
-	}
-	// step 6: divide the result of indirectLightContrib by the number of samples N (Monte Carlo integration)
-	indirectLightContrib /= N;
-
-	// final result is diffuse from direct and indirect lighting multiplied by the object color at P
-	return (indirectLightContrib + directLightContrib) * objectAlbedo / M_PI;
-}
-	*/
 	return glm::vec3(0);
 }
 
@@ -178,12 +166,12 @@ int MonteCarloIntegrator::getNearestIntersectionIndex(Ray& r, float& depth, int 
 	int index = -1;
 	if (type == 0) { // Primitives
 		for (int i = 0; i < scene_->primitives_.size(); ++i) {
-			Ray ray = r;
 			if (scene_->primitives_[i]->shape_->intersect(r, currentDistance)) {
 				if (currentDistance < distance) {
 					distance = currentDistance;
 					index = i;
 					depth = distance;
+
 				}
 			}
 		}
@@ -191,7 +179,6 @@ int MonteCarloIntegrator::getNearestIntersectionIndex(Ray& r, float& depth, int 
 	}
 	else { // Lights
 		for (int i = 0; i < scene_->lights_.size(); ++i) {
-			Ray ray = r;
 			if (scene_->lights_[i]->shape_->intersect(r, currentDistance)) {
 				if (currentDistance < distance) {
 					distance = currentDistance;
@@ -202,9 +189,9 @@ int MonteCarloIntegrator::getNearestIntersectionIndex(Ray& r, float& depth, int 
 		}
 		return index;
 	}
-	std::cout << "\n";
 }
 
+// Generates a direction vector around normal with variance given by r1 and r2
 glm::vec3 MonteCarloIntegrator::uniformSampleHemisphere(const glm::vec3& normal, const float& r1, const float& r2)
 {
 	float inclination = glm::acos(1 - 2 * r1);
@@ -222,8 +209,71 @@ glm::vec3 MonteCarloIntegrator::uniformSampleHemisphere(const glm::vec3& normal,
 	return glm::normalize(randomDirection);
 }
 
+// Calculates direct lighting given normal at intersected object and ray which holds material properties and intersectionPoint = ray.end_
+glm::vec3 MonteCarloIntegrator::directLight(const Ray& ray)
+{
+	glm::vec3 color = glm::vec3(0);
+	for (int i = 0; i < scene_->lights_.size(); ++i) {
+		Light* light = scene_->lights_[i];
+		for (int lightSamples = 0; lightSamples < lightSamples_; ++lightSamples) {
+
+			// Get random numbers
+			float r1 = distribution(generator);
+			float r2 = distribution(generator);
+			glm::vec3 pointOnLightHemisphere = light->shape_->getPointOnSurface(glm::normalize(ray.end_ - light->shape_->getPosition()), r1, r2);
+
+			glm::vec3 lightDirection = glm::normalize(light->shape_->getPosition() - ray.end_);
+			Ray lightRay = Ray(ray.end_, lightDirection);
+			float x;
+			if (light->shape_->intersect(lightRay, x)) {
+				color += ray.material_->color_ * std::max(glm::dot(lightDirection, ray.intersectionNormal_), 0.0f) / static_cast<float>(lightSamples_);
+			}
+		}
+	}
+	return color;
+}
+
+glm::vec3 MonteCarloIntegrator::indirectLight(const Ray& ray)
+{
+	glm::vec3 color = glm::vec3(0);
+	float pdf = 1.0f / (2.0f * 3.14f); // PDF = probability to sample specific direction in solid angle (current is hardcoded for full hemisphere)
+	for (int n = 0; n < indirectLightSamplesOnHemisphere_; ++n) {
+		float r1 = distribution(generator);
+		float r2 = distribution(generator);
+
+		glm::vec3 sampleDirection = uniformSampleHemisphere(ray.intersectionNormal_, r1, r2);
+		Ray indirectRay = Ray(ray.end_, sampleDirection, ray.depth_ + 1);
+
+		// Trace indirect ray and adjust for incoming angle and propbability of specific ray
+		color += traceRay(indirectRay) * std::max(glm::dot(indirectRay.direction_, ray.intersectionNormal_), 0.0f) / pdf;
+	}
+	color /= static_cast<float>(indirectLightSamplesOnHemisphere_);
+	return color;
+}
+
+glm::vec3 MonteCarloIntegrator::traverseTree(const Ray& root)
+{
+	glm::vec3 color = glm::vec3(0);
+
+
+	color += directLight(root) / 3.14f;
+	if (root.reflected_ != nullptr) {
+		traverseTree(*root.reflected_);
+	}
+	if (root.refracted_ != nullptr) {
+		traverseTree(*root.refracted_);
+	}
+
+
+	return glm::clamp(color, 0.0f, 1.0f);
+}
+
 void MonteCarloIntegrator::GUI() {
+
 	ImGui::Text("Monte Carlo Integrator");
 	ImGui::SliderInt("Max recursive depth", &maxRecursiveDepth_, 0, 10);
-	ImGui::SliderInt("Samples on hemisphere", &nHemisphereSamples_, 0, 100);
+	ImGui::SliderInt("Indirect rays on hemisphere", &indirectLightSamplesOnHemisphere_, 0, 100);
+	ImGui::SliderInt("Samples per light", &lightSamples_, 0, 100);
+	ImGui::SliderFloat("BIAS", &bias_, 1e-4f, 1e0f, "%.5f");
+	Integrator::GUI();
 }

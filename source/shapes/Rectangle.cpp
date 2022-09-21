@@ -61,6 +61,8 @@ bool Rectangle::intersect(Ray& ray, float& t)
 	t = glm::dot(edge2, Q) * invDet;
 
 	if (t > FLT_EPSILON) {
+		ray.setEnd(t);
+		ray.intersectionNormal_ = getNormal(ray.end_);
 		return true;
 	}
 	return false;
@@ -84,6 +86,14 @@ float Rectangle::getArea()
 	float edge1 = glm::length(vertices_[1] - vertices_[0]);
 	float edge2 = glm::length(vertices_[2] - vertices_[0]);
 	return edge1 * edge2;
+}
+
+glm::vec3 Rectangle::getPointOnSurface(const glm::vec3& normal, float u, float v)
+{
+	glm::vec3 edge1 = glm::normalize(vertices_[0] - vertices_[1]);
+	glm::vec3 edge2 = glm::normalize(vertices_[2] - vertices_[1]);
+
+	return vertices_[1] + edge1 * u + edge2 * v;
 }
 
 void Rectangle::GUI()

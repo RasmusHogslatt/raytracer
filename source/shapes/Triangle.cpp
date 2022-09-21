@@ -70,6 +70,8 @@ bool Triangle::intersect(Ray& ray, float& t)
 
 	// Intersection in front of ray's origin
 	if (t > FLT_EPSILON) {
+		ray.setEnd(t);
+		ray.intersectionNormal_ = getNormal(ray.end_);
 		return true;
 	}
 	// Intersection behind ray's origin
@@ -89,6 +91,18 @@ glm::vec3 Triangle::getNormal(const glm::vec3& intersectionPoint)
 	glm::vec3 edge2 = glm::normalize(vertices_[2] - vertices_[1]);
 	normal_ = glm::normalize(glm::cross(edge1, edge2));
 	return normal_;
+}
+
+glm::vec3 Triangle::getPointOnSurface(const glm::vec3& normal, float u, float v)
+{
+	if (u + v > 1.0f) {
+		u = 1.0f - u;
+		v = 1.0f - v;
+	}
+	glm::vec3 edge1 = glm::normalize(vertices_[0] - vertices_[1]);
+	glm::vec3 edge2 = glm::normalize(vertices_[2] - vertices_[1]);
+
+	return vertices_[1] + edge1 * u + edge2 * v;
 }
 
 float Triangle::getArea()

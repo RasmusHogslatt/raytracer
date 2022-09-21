@@ -43,7 +43,7 @@ void App::GUIMenu() {
 
 void App::GUIControlPanel() {
 	ImGui::BeginChild("ControlPanel", ImVec2(600, 0), true);
-	ImGui::SliderInt("Active integrator", &activeIntegrator_, 0, integrators_.size() - static_cast<size_t>(1));
+	ImGui::SliderInt("Active integrator", &activeIntegrator_, 0, static_cast<int>(integrators_.size()) - 1);
 	if (ImGui::Button("RENDER")) {
 		renderStart_ = true;
 	}
