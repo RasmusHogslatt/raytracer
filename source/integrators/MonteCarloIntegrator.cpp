@@ -56,18 +56,17 @@ glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 	glm::vec3 reflectedColor = glm::vec3(0);
 	glm::vec3 refractedColor = glm::vec3(0);
 
-
 	// Get closest intersected object
 	float distance = 0.0f;
 	int objectIndex = getNearestIntersectionIndex(r, distance, 0);
-
 
 	// Intersection found
 	if (objectIndex != -1) {
 		r.material_ = scene_->primitives_[objectIndex]->material_;
 		r.end_ = r.origin_ + r.direction_ * distance;
-		r.intersectionNormal_ = scene_->primitives_[objectIndex]->shape_->getNormal(r.end_); // Normalized
+		r.intersectionNormal_ = scene_->primitives_[objectIndex]->shape_->getNormal(r.end_);
 
+		// Check inside or outside object
 		if (glm::dot(r.direction_, r.intersectionNormal_) < 0.0f) {
 			r.inside_ = false;
 		}
@@ -77,11 +76,9 @@ glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 
 		switch (r.material_->id_) {
 		case 0: {
-			if (/*!r.inside_*/1) {
-				directColor += directLight(r);
-				//indirectColor += indirectLight(r);
-				finalColor += (directColor / 3.14f + 2.0f * indirectColor);
-			}
+			directColor += directLight(r);
+			//indirectColor += indirectLight(r);
+			finalColor += (directColor / 3.14f + 2.0f * indirectColor);
 			break;
 		}
 		case 1: {
@@ -107,29 +104,25 @@ glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 				else {
 
 				}
-				float eta = n1 / n2;
 				glm::vec3 reflectedOrigin = r.end_ + r.intersectionNormal_ * bias_ * sign;
 				glm::vec3 refractedOrigin = r.end_ - r.intersectionNormal_ * bias_ * sign;
 
-				// Reflective coefficient -> inside outside handled by fresnel
-				float reflectiveCoefficient = fresnel(r.direction_, r.intersectionNormal_, n1, n2);
+				// Reflective coefficient
+				float reflectiveCoefficient = schlickApproximation(r.direction_, r.intersectionNormal_, n1, n2);
 
 				// Calculate refracted ray
-				bool TIR = false;
-				if (reflectiveCoefficient < 1.0f) {
-					glm::vec3 refractedDirection = getRefractionDirection(r.direction_, r.intersectionNormal_, n1, n2, TIR);
-					if (!TIR) {
-
-						Ray refractedRay(refractedOrigin, refractedDirection, r.depth_ + 1, std::make_shared<Ray>(r));
-						if (r.inside_) {
-							refractedRay.inside_ = false;
-						}
-						else {
-							refractedRay.inside_ = true;
-						}
-						r.refracted_ = std::make_shared<Ray>(refractedRay);
-						refractedColor += traceRay(refractedRay) * (1.0f - reflectiveCoefficient);
+				bool TIR = false; // Updated by getRefractionDirection
+				glm::vec3 refractedDirection = getRefractionDirection(r.direction_, r.intersectionNormal_, n1, n2, TIR);
+				if (!TIR) {
+					Ray refractedRay(refractedOrigin, refractedDirection, r.depth_ + 1, std::make_shared<Ray>(r));
+					if (r.inside_) {
+						refractedRay.inside_ = false;
 					}
+					else {
+						refractedRay.inside_ = true;
+					}
+					r.refracted_ = std::make_shared<Ray>(refractedRay);
+					refractedColor += traceRay(refractedRay) * (1.0f - reflectiveCoefficient);
 				}
 
 				// Calculate reflected ray
@@ -146,12 +139,10 @@ glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 
 				// Add colors
 				finalColor += refractedColor + reflectedColor;
-				//finalColor = glm::vec3(reflectiveCoefficient);
 			}
 			break;
 		}
 		default:
-			std::cout << r.material_->id_ << "\n";
 			break;
 		}
 		return glm::clamp(finalColor, 0.0f, 1.0f);
