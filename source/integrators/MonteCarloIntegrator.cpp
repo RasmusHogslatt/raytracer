@@ -31,18 +31,22 @@ void MonteCarloIntegrator::Integrate(Texture& renderTexture) {
 			for (currentSample = 0; currentSample < samplerPerPixel_; ++currentSample) {
 				samplePosition = scene_->samplers_[scene_->activeSampler_]->getSamplePosition(x, y, *scene_->cameras_[scene_->activeCamera_], currentSample);
 				ray = scene_->cameras_[scene_->activeCamera_]->generateRay(samplePosition);
-
-				color = traceRay(ray, 0);
+				ray.depth_ = 0;
+				ray.parent_ = nullptr;
+				color = traceRay(ray);
 			}
+			//color = traverseTree(ray);
 			renderTexture.setPixelColor(x, y, ImVec4(color.r, color.g, color.b, 1.0f));
 		}
 	}
 	renderTexture.updateTextureData();
 }
 
-glm::vec3 MonteCarloIntegrator::traceRay(Ray& r, int depth) {
+glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 	// Terminate recursion
-	if (depth > maxRecursiveDepth_) {
+	if (r.depth_ > maxRecursiveDepth_) {
+		r.reflected_ = nullptr;
+		r.refracted_ = nullptr;
 		return glm::vec3(0);
 	}
 
@@ -53,88 +57,97 @@ glm::vec3 MonteCarloIntegrator::traceRay(Ray& r, int depth) {
 	glm::vec3 refractedColor = glm::vec3(0);
 
 
-	// Get nearest object
+	// Get closest intersected object
 	float distance = 0.0f;
 	int objectIndex = getNearestIntersectionIndex(r, distance, 0);
+
+
+	// Intersection found
 	if (objectIndex != -1) {
-		// Easy access to object
-		Primitive* object = scene_->primitives_[objectIndex];
-		Material* m = object->material_;
+		r.material_ = scene_->primitives_[objectIndex]->material_;
+		r.end_ = r.origin_ + r.direction_ * distance;
+		r.intersectionNormal_ = scene_->primitives_[objectIndex]->shape_->getNormal(r.end_); // Normalized
 
+		if (glm::dot(r.direction_, r.intersectionNormal_) < 0.0f) {
+			r.inside_ = false;
+		}
+		else {
+			r.inside_ = true;
+		}
 
-		// Get intersection point, normal and 
-		glm::vec3 intersectionPoint = r.end_;
-
-		glm::vec3 normal = glm::normalize(object->shape_->getNormal(intersectionPoint));
-
-
-		switch (m->id_) {
+		switch (r.material_->id_) {
 		case 0: {
-			directColor += directLight(r);
-			//indirectColor += indirectLight(r, depth);
-			finalColor += (directColor / 3.14f + 2.0f * indirectColor);
+			if (/*!r.inside_*/1) {
+				directColor += directLight(r);
+				//indirectColor += indirectLight(r);
+				finalColor += (directColor / 3.14f + 2.0f * indirectColor);
+			}
 			break;
 		}
 		case 1: {
-			Ray reflectedRay = Ray(r.end_ + normal * bias_, glm::reflect(r.direction_, normal));
-			reflectedColor = traceRay(reflectedRay, ++depth);
-			finalColor += reflectedColor;
+			if (r.depth_ + 1 <= maxRecursiveDepth_) {
+				glm::vec3 intersectionOffset = r.end_ + r.intersectionNormal_ * bias_;
+				glm::vec3 direction = glm::reflect(r.direction_, r.intersectionNormal_);
+				Ray reflectedRay(intersectionOffset, direction, r.depth_ + 1, std::make_shared<Ray>(r));
+				reflectedColor += traceRay(reflectedRay);
+				finalColor += reflectedColor;
+			}
 			break;
 		}
 		case 2: {
-			glm::vec3 refractedOrigin = intersectionPoint;
-			glm::vec3 reflectedOrigin = intersectionPoint;
-			float etai = m->ior_;
-			float etat = globalIOR_;
+			if (r.depth_ + 1 <= maxRecursiveDepth_) {
+				// Calculate new ray origins with offset + ratio of ior
+				float sign = 1.0f;
+				float n1 = globalIOR_;
+				float n2 = r.material_->ior_;
+				if (r.inside_) {
+					sign = -1.0f;
+					std::swap(n1, n2);
+				}
+				else {
 
-			float inner = etai;
-			float outer = etat;
+				}
+				float eta = n1 / n2;
+				glm::vec3 reflectedOrigin = r.end_ + r.intersectionNormal_ * bias_ * sign;
+				glm::vec3 refractedOrigin = r.end_ - r.intersectionNormal_ * bias_ * sign;
 
-			float eta = 0.0f;
-			bool outside = glm::dot(r.direction_, normal) < 0.0f;
-			glm::vec3 dummyNormal = normal;
-			if (outside) {
-				eta = etat / etai;
+				// Reflective coefficient -> inside outside handled by fresnel
+				float reflectiveCoefficient = fresnel(r.direction_, r.intersectionNormal_, n1, n2);
 
-				reflectedOrigin = reflectedOrigin + normal * bias_;
-				refractedOrigin = refractedOrigin - normal * bias_;
-				dummyNormal = normal;
-				r.inside_ = true;
-			}
-			else {
-				r.inside_ = false;
-				inner = etat;
-				outer = etai;
-				eta = etai / etat;
-				reflectedOrigin = reflectedOrigin - normal * bias_;
-				refractedOrigin = refractedOrigin + normal * bias_;
-				dummyNormal = -normal;
-			}
-			// Reflective coefficient
-			float kr = fresnel(r.direction_, normal, eta);
+				// Calculate refracted ray
+				bool TIR = false;
+				if (reflectiveCoefficient < 1.0f) {
+					glm::vec3 refractedDirection = getRefractionDirection(r.direction_, r.intersectionNormal_, n1, n2, TIR);
+					if (!TIR) {
 
-			Ray reflectedRay(reflectedOrigin, glm::reflect(r.direction_, dummyNormal), std::make_shared<Ray>(r));
-			r.reflected_ = std::make_shared<Ray>(reflectedRay);
-			reflectedColor += traceRay(reflectedRay, ++depth);
+						Ray refractedRay(refractedOrigin, refractedDirection, r.depth_ + 1, std::make_shared<Ray>(r));
+						if (r.inside_) {
+							refractedRay.inside_ = false;
+						}
+						else {
+							refractedRay.inside_ = true;
+						}
+						r.refracted_ = std::make_shared<Ray>(refractedRay);
+						refractedColor += traceRay(refractedRay) * (1.0f - reflectiveCoefficient);
+					}
+				}
 
-			if (kr < 1.0f) {
-				glm::vec3 refractecDirection = glm::refract(r.direction_, dummyNormal, eta);
-				Ray refractedRay(refractedOrigin, refractecDirection, std::make_shared<Ray>(r));
-				r.refracted_ = std::make_shared<Ray>(refractedRay);
-				refractedColor += traceRay(refractedRay, ++depth);
-				
+				// Calculate reflected ray
+				glm::vec3 reflectedDirection = glm::reflect(r.direction_, r.intersectionNormal_);
+				Ray reflectedRay(reflectedOrigin, reflectedDirection, r.depth_ + 1, std::make_shared<Ray>(r));
+				r.reflected_ = std::make_shared<Ray>(reflectedRay);
 				if (r.inside_) {
 					reflectedRay.inside_ = true;
-					refractedRay.inside_ = false;
 				}
 				else {
 					reflectedRay.inside_ = false;
-					refractedRay.inside_ = true;
 				}
+				reflectedColor += traceRay(reflectedRay) * reflectiveCoefficient;
+
+				// Add colors
+				finalColor += refractedColor + reflectedColor;
+				//finalColor = glm::vec3(reflectiveCoefficient);
 			}
-
-
-			finalColor += (1.0f - kr) * refractedColor + kr * reflectedColor;
 			break;
 		}
 		default:
@@ -153,13 +166,12 @@ int MonteCarloIntegrator::getNearestIntersectionIndex(Ray& r, float& depth, int 
 	int index = -1;
 	if (type == 0) { // Primitives
 		for (int i = 0; i < scene_->primitives_.size(); ++i) {
-			Ray ray = r;
 			if (scene_->primitives_[i]->shape_->intersect(r, currentDistance)) {
 				if (currentDistance < distance) {
 					distance = currentDistance;
 					index = i;
 					depth = distance;
-					r.material_ = scene_->primitives_[index]->material_;
+
 				}
 			}
 		}
@@ -167,7 +179,6 @@ int MonteCarloIntegrator::getNearestIntersectionIndex(Ray& r, float& depth, int 
 	}
 	else { // Lights
 		for (int i = 0; i < scene_->lights_.size(); ++i) {
-			Ray ray = r;
 			if (scene_->lights_[i]->shape_->intersect(r, currentDistance)) {
 				if (currentDistance < distance) {
 					distance = currentDistance;
@@ -215,16 +226,14 @@ glm::vec3 MonteCarloIntegrator::directLight(const Ray& ray)
 			Ray lightRay = Ray(ray.end_, lightDirection);
 			float x;
 			if (light->shape_->intersect(lightRay, x)) {
-
 				color += ray.material_->color_ * std::max(glm::dot(lightDirection, ray.intersectionNormal_), 0.0f) / static_cast<float>(lightSamples_);
-
 			}
 		}
 	}
 	return color;
 }
 
-glm::vec3 MonteCarloIntegrator::indirectLight(const Ray& ray, int& depth)
+glm::vec3 MonteCarloIntegrator::indirectLight(const Ray& ray)
 {
 	glm::vec3 color = glm::vec3(0);
 	float pdf = 1.0f / (2.0f * 3.14f); // PDF = probability to sample specific direction in solid angle (current is hardcoded for full hemisphere)
@@ -233,9 +242,10 @@ glm::vec3 MonteCarloIntegrator::indirectLight(const Ray& ray, int& depth)
 		float r2 = distribution(generator);
 
 		glm::vec3 sampleDirection = uniformSampleHemisphere(ray.intersectionNormal_, r1, r2);
-		Ray indirectRay = Ray(ray.end_, sampleDirection);
+		Ray indirectRay = Ray(ray.end_, sampleDirection, ray.depth_ + 1);
+
 		// Trace indirect ray and adjust for incoming angle and propbability of specific ray
-		color += traceRay(indirectRay, ++depth) * std::max(glm::dot(indirectRay.direction_, ray.intersectionNormal_), 0.0f) / pdf;
+		color += traceRay(indirectRay) * std::max(glm::dot(indirectRay.direction_, ray.intersectionNormal_), 0.0f) / pdf;
 	}
 	color /= static_cast<float>(indirectLightSamplesOnHemisphere_);
 	return color;
@@ -243,17 +253,19 @@ glm::vec3 MonteCarloIntegrator::indirectLight(const Ray& ray, int& depth)
 
 glm::vec3 MonteCarloIntegrator::traverseTree(const Ray& root)
 {
-	int depth = 0;
 	glm::vec3 color = glm::vec3(0);
-	glm::vec3 directColor = glm::vec3(0);
-	glm::vec3 indirectColor = glm::vec3(0);
 
-	while (root.reflected_ != nullptr || root.refracted_ != nullptr) {
-		directColor += (1.0f - root.material_->reflectance_) * directLight(root);
-		indirectColor += indirectLight(root, ++depth);
+
+	color += directLight(root) / 3.14f;
+	if (root.reflected_ != nullptr) {
+		traverseTree(*root.reflected_);
 	}
-	color = directColor + indirectColor;
-	return color;
+	if (root.refracted_ != nullptr) {
+		traverseTree(*root.refracted_);
+	}
+
+
+	return glm::clamp(color, 0.0f, 1.0f);
 }
 
 void MonteCarloIntegrator::GUI() {

@@ -15,60 +15,38 @@ glm::vec3 Integrator::getReflectionDirection(const glm::vec3& incident, const gl
 	return glm::normalize(incident - 2.0f * glm::dot(incident, normal) * normal);
 }
 
-glm::vec3 Integrator::getRefractionDirection(const glm::vec3& incident, const glm::vec3& normal, float ior) const
+glm::vec3 Integrator::getRefractionDirection(const glm::vec3& incident, const glm::vec3& normal, float n1, float n2, bool& TIR) const
 {
-	glm::vec3 n = normal;
-	float innerIOR = ior;
-	float globalIOR = globalIOR_;
-
-	float cosi = glm::clamp(glm::dot(incident, normal), -1.0f, 1.0f);
-
-	//	Outside
-	if (cosi < 0.0f) {
-		cosi = -cosi;
+	TIR = false;
+	const float n = n1 / n2;
+	const float cosI = glm::dot(normal, incident);
+	const float sinT2 = n * n * (1.0f - cosI * cosI);
+	if (sinT2 > 1.0f) {
+		TIR = true;
+		return glm::vec3(0); // TIR
 	}
-	// Inside
-	else {
-		std::swap(innerIOR, globalIOR);
-		n = -normal;
-	}
-	float resultingIOR = innerIOR / globalIOR;
-	float k = 1.0f - resultingIOR * resultingIOR * (1.0f - cosi * cosi);
-
-	// Total internal reflection
-	if (k < 0.0f) {
-		return glm::vec3(0);
-	}
-	else {
-		return glm::normalize(resultingIOR * incident + (resultingIOR * cosi - std::sqrt(k)) * n);
-	}
+	const float cosT = sqrt(1.0f - sinT2);
+	return n * incident + (n * cosI - cosT) * normal;
 }
 
-float Integrator::fresnel(const glm::vec3& incident, const glm::vec3& normal, float ior)
+float Integrator::fresnel(const glm::vec3& incident, const glm::vec3& normal, float n1, float n2)
 {
-	float kr = 0.0f;
-	float cosi = glm::clamp(glm::dot(incident, normal), -1.0f, 1.0f);
-	float innerIOR = ior;
-	float globalIOR = globalIOR_;
-
-	if (cosi > 0.0f) {
-		std::swap(innerIOR, globalIOR);
+	// Schlick aproximation
+	float r0 = (n1 - n2) / (n1 + n2);
+	r0 *= r0;
+	float cosX = -glm::dot(normal, incident);
+	if (n1 > n2)
+	{
+		float n = n1 / n2;
+		float sinT2 = n * n * (1.0 - cosX * cosX);
+		// Total internal reflection
+		if (sinT2 > 1.0)
+			return 1.0f;
+		cosX = sqrt(1.0 - sinT2);
 	}
-
-	float sint = innerIOR / globalIOR * std::sqrt(std::max(0.0f, 1.0f - cosi * cosi));
-
-	if (sint >= 1.0f) {
-		kr = 1.0f;
-		return kr;
-	}
-	else {
-		float cost = std::sqrt(std::max(0.0f, 1.0f - sint * sint));
-		cosi = std::fabs(cosi);
-		float Rs = ((globalIOR * cosi) - (innerIOR * cost)) / ((globalIOR * cosi) + (innerIOR * cost));
-		float Rp = ((innerIOR * cosi) - (globalIOR * cost)) / ((innerIOR * cosi) + (globalIOR * cost));
-		kr = (Rs * Rs + Rp * Rp) / 2.0f;
-		return kr;
-	}
+	float x = 1.0 - cosX;
+	float ret = r0 + (1.0 - r0) * x * x * x * x * x;
+	return ret;
 }
 
 float Integrator::schlick(const glm::vec3& incident, const glm::vec3& normal, float etai, float etat)
@@ -76,4 +54,14 @@ float Integrator::schlick(const glm::vec3& incident, const glm::vec3& normal, fl
 	float cosTheta = glm::dot(incident, normal);
 	float r0 = std::pow(((etat - etai) / (etat + etai)), 2);
 	return r0 + (1.0f - r0) * std::pow((1.0f - cosTheta), 5);
+}
+
+float Integrator::getIORRatio(const Ray& ray)
+{
+	if (ray.inside_) {
+		return ray.material_->ior_ / globalIOR_;
+	}
+	else {
+		return globalIOR_ / ray.material_->ior_;
+	}
 }

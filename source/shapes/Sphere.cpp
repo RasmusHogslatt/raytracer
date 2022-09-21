@@ -37,11 +37,12 @@ bool Sphere::intersect(Ray& ray, float& t)
 	if (t0 > t1) {
 		std::swap(t0, t1);
 	}
-	ray.inside_ = false;
+	//ray.inside_ = false;
 	// First hit is behind ray origin -> ray is inside sphere
 	if (t0 < 0.0f) {
 		t0 = t1;
-		ray.inside_ = true;
+		
+		//ray.inside_ = true;
 
 		// Second hit is also behind ray origin -> ray is outside sphere
 		if (t0 < 0.0f) {
@@ -49,9 +50,6 @@ bool Sphere::intersect(Ray& ray, float& t)
 		}
 	}
 	t = t0;
-
-	ray.setEnd(t);
-	ray.intersectionNormal_ = getNormal(ray.end_);
 	return true;
 	//float pHalf = glm::dot((ray.origin_ - position_), ray.direction_);
 	//float toSquare = pow(pHalf, 2.0f) + pow(radius_, 2.0f) - pow(glm::length(ray.origin_ - position_), 2.0f);
