@@ -29,6 +29,7 @@ set(HEADER_FILES
     include/shapes/Polygon.h
     include/shapes/Triangle.h
     include/shapes/Rectangle.h
+    include/shapes/Tetrahedron.h
     include/cameras/Camera.h
     include/cameras/PerspectiveCamera.h
     include/cameras/OrthographicCamera.h
@@ -54,6 +55,7 @@ set(SOURCE_FILES
     source/shapes/Polygon.cpp
     source/shapes/Triangle.cpp
     source/shapes/Rectangle.cpp
+    source/shapes/Tetrahedron.cpp
     source/cameras/Camera.cpp
     source/cameras/PerspectiveCamera.cpp
     source/cameras/OrthographicCamera.cpp

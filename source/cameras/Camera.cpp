@@ -3,7 +3,7 @@
 #include <cameras/Camera.h>
 #include <imgui.h>
 
-Camera::Camera(glm::vec3 position, glm::vec3 front, glm::vec3 up, glm::ivec2 resolution, int samples, float fov) : position_{ position }, front_{ front }, up_{ up }, resolution_{ resolution }, samples_{ samples }, yaw_{ -90.0f }, pitch_{ 0.0f }, worldUp_{ glm::vec3(0, 1, 0) }, aspectRatio_{ static_cast<float>(resolution.x) / static_cast<float>(resolution.y) }, fov_{ fov }
+Camera::Camera(glm::vec3 position, glm::vec3 front, glm::vec3 up, glm::ivec2 resolution, int samples, float fov) : position_{ position }, front_{ front }, up_{ up }, resolution_{ resolution }, yaw_{ -90.0f }, pitch_{ 0.0f }, worldUp_{ glm::vec3(0, 1, 0) }, aspectRatio_{ static_cast<float>(resolution.x) / static_cast<float>(resolution.y) }, fov_{ fov }
 {
 	updateVectors();
 }
@@ -20,10 +20,7 @@ void Camera::updateVectors()
 
 void Camera::GUI()
 {
-	ImGui::NewLine();
-	ImGui::Text("CAMERA");
 	int changed = 0;
-	changed += ImGui::SliderInt("Samples/Pixel", &samples_, 1, 10);
 	changed += ImGui::SliderFloat3("Camera position", &position_.x, -10, 10);
 	changed += ImGui::SliderFloat("Yaw", &yaw_, -180, 180);
 	changed += ImGui::SliderFloat("Pitch", &pitch_, -180, 180);

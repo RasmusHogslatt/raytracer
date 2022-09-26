@@ -2,6 +2,7 @@
 
 #include <core/Scene.h>
 #include <core/Texture.h>
+#include <random>
 
 class Integrator {
 public:

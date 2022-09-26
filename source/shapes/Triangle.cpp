@@ -116,7 +116,6 @@ float Triangle::getArea()
 
 void Triangle::GUI()
 {
-	ImGui::Text("Shape: TRIANGLE");
 	ImGui::SliderFloat3("Vertex 1", &vertices_[0].x, -10.0f, 10.0f);
 	ImGui::SliderFloat3("Vertex 2", &vertices_[1].x, -10.0f, 10.0f);
 	ImGui::SliderFloat3("Vertex 3", &vertices_[2].x, -10.0f, 10.0f);

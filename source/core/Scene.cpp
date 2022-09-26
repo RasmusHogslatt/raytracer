@@ -4,18 +4,21 @@
 #include <imgui.h>
 #include <iostream>
 #include <samplers/CenterSampler.h>
+#include <samplers/RandomSampler.h>
 #include <cameras/PerspectiveCamera.h>
 #include <lights/SphereLight.h>
 #include <shapes/Triangle.h>
 #include <shapes/Rectangle.h>
+#include <shapes/Tetrahedron.h>
 
-Scene::Scene() : activeCamera_{ 0 }, activeSampler_{ 0 }, activePrimitive_{ 0 }, activeLight_{ 0 }, dummySphere_{ Primitive() }, dummyTriangle_{ Primitive() }, dummyRectangle_{ Primitive() }, dummySphereLight_{ SphereLight() }, activeMaterial_{ 0 } {
+Scene::Scene() : activeCamera_{ 0 }, activeSampler_{ 1 }, activePrimitive_{ 0 }, activeLight_{ 0 }, dummySphere_{ Primitive() }, dummyTriangle_{ Primitive() }, dummyRectangle_{ Primitive() }, dummyTetrahedron_{ Primitive() }, dummySphereLight_{ SphereLight() }, activeMaterial_{ 0 } {
 	materials_.push_back(new Lambertian());
 	materials_.push_back(new Mirror());
 	materials_.push_back(new Glass());
 	dummySphere_.shape_ = new Sphere(); dummySphere_.material_ = materials_[activeMaterial_];
 	dummyTriangle_.shape_ = new Triangle(); dummyTriangle_.material_ = materials_[activeMaterial_];
 	dummyRectangle_.shape_ = new Rectangle(); dummyRectangle_.material_ = materials_[activeMaterial_];
+	dummyTetrahedron_.shape_ = new Tetrahedron(); dummyTetrahedron_.material_ = materials_[activeMaterial_];
 	dummySphereLight_.shape_ = new Sphere();
 	// Add primitives
 
@@ -26,43 +29,74 @@ Scene::Scene() : activeCamera_{ 0 }, activeSampler_{ 0 }, activePrimitive_{ 0 },
 
 	// Add samplers
 	samplers_.push_back(new CenterSampler());
+	samplers_.push_back(new RandomSampler());
 
 	loadRoom();
 }
 
 void Scene::GUI()
 {
-	ImGui::SliderInt("Primitive type", &activePrimitive_, 0, 2);
-	ImGui::SliderInt("Light type", &activeLight_, 0, 0);
-	ImGui::SliderInt("Camera type", &activeCamera_, 0, 0);
-	ImGui::SliderInt("Sampler type", &activeSampler_, 0, 0);
-	ImGui::SliderInt("Material type", &activeMaterial_, 0, 2);
+	ImGui::NewLine();
+	ImGui::Text("SCENE");
+	ImGui::NewLine();
 
-	cameras_[activeCamera_]->GUI();
+	ImGui::Text("SAMPLER");
+	ImGui::SliderInt("Sampler type : ", &activeSampler_, 0, 1);
+	switch (activeSampler_) {
+	case 0:
+		ImGui::SameLine(); ImGui::Text("Center");
+		break;
+	case 1:
+		ImGui::SameLine(); ImGui::Text("Random");
+		break;
+	}
 	samplers_[activeSampler_]->GUI();
 
-	if (activePrimitive_ == 0) {
+	ImGui::NewLine();
+	ImGui::Text("CAMERA");
+	ImGui::SliderInt("Camera type", &activeCamera_, 0, 0);
+	cameras_[activeCamera_]->GUI();
+
+	ImGui::NewLine();
+	ImGui::Text("OBJECTS");
+	ImGui::SliderInt("Shape : ", &activePrimitive_, 0, 3);
+	switch (activePrimitive_) {
+	case 0:
+		ImGui::SameLine(); ImGui::Text("Sphere");
 		dummySphere_.GUI();
-	}
-	else if (activePrimitive_ == 1) {
+		break;
+	case 1:
+		ImGui::SameLine(); ImGui::Text("Triangle");
 		dummyTriangle_.GUI();
-	}
-	else if (activePrimitive_ == 2) {
+		break;
+	case 2:
+		ImGui::SameLine(); ImGui::Text("Rectangle");
 		dummyRectangle_.GUI();
-	}
-	if (activeLight_ == 0) {
-		dummySphereLight_.GUI();
-	}
-	else if (activeLight_ == 1) {
-		// add area light
-	}
-	else if (activeLight_ == 2) {
-		// add point light
+		break;
+	case 4:
+		ImGui::SameLine(); ImGui::Text("Tetrahedron");
+		dummyTetrahedron_.GUI();
+		break;
 	}
 
+	ImGui::NewLine();
+	ImGui::Text("MATERIAL");
+	ImGui::SliderInt("Material : ", &activeMaterial_, 0, 2);
+	ImGui::SameLine();
 	materials_[activeMaterial_]->GUI();
 
-	if (ImGui::Button("Add primitive")) {
+	ImGui::NewLine();
+	ImGui::Text("LIGHTS");
+	ImGui::SliderInt("Light type : ", &activeLight_, 0, 0);
+	switch (activeLight_) {
+	case 0:
+		ImGui::SameLine(); ImGui::Text("Sphere light");
+		dummySphereLight_.GUI();
+		break;
+	}
+
+	ImGui::NewLine();
+	if (ImGui::Button("ADD OBJECT")) {
 
 		if (activePrimitive_ == 0) {
 			dummySphere_.material_ = materials_[activeMaterial_]->clone();
@@ -76,8 +110,13 @@ void Scene::GUI()
 			dummyRectangle_.material_ = materials_[activeMaterial_]->clone();
 			primitives_.push_back(dummyRectangle_.clone());
 		}
+		else if (activePrimitive_ == 3) {
+			dummyTetrahedron_.material_ = materials_[activeMaterial_]->clone();
+			primitives_.push_back(dummyTetrahedron_.clone());
+		}
 	}
-	if (ImGui::Button("Add light")) {
+	ImGui::SameLine();
+	if (ImGui::Button("ADD LIGHT")) {
 		if (activeLight_ == 0) {
 			lights_.push_back(dummySphereLight_.clone());
 		}
@@ -174,8 +213,8 @@ void Scene::loadRoom()
 	Light sl2 = Light();
 	Light sl3 = Light();
 	Sphere s1 = Sphere(glm::vec3(0.0f, 3.5, 0.0f), 1.0f);
-	Sphere s2 = Sphere(glm::vec3(2.0f, 3.0f, 4.0f), 1.0f);
-	Sphere s3 = Sphere(glm::vec3(-2.0f, 1.5, 3.0f), 1.0f);
+	Sphere s2 = Sphere(glm::vec3(3.0f, 3.0f, 4.0f), 1.0f);
+	Sphere s3 = Sphere(glm::vec3(-3.0f, 0.5, 3.0f), 1.0f);
 	sl1.shape_ = &s1;
 	sl1.flux_ = 100;
 	sl2.shape_ = &s2;

@@ -3,6 +3,12 @@
 #include <samplers/Sampler.h>
 #include <imgui.h>
 
+
+Sampler::Sampler()
+{
+	halfPixelSize_ = glm::vec2(1);
+}
+
 glm::vec2 Sampler::getCenterSample(int x, int y, Camera& c) {
 	// Prerequisites
 	glm::vec2 pos = glm::vec2(0);
@@ -26,13 +32,13 @@ glm::vec2 Sampler::getCenterSample(int x, int y, Camera& c) {
 	float cameray = screeny;
 
 	float scale = tan(glm::radians(c.fov_ * 0.5f));
-	// Set sample position
-	pos.x = camerax * scale;
-	pos.y = cameray * scale;
 
+	halfPixelSize_ = glm::vec2(c.aspectRatio_ / width, 1.0f / height);
+	// Set sample position
+	pos.x = camerax * scale + halfPixelSize_.x;
+	pos.y = cameray * scale + halfPixelSize_.y;
+	
 	return pos;
 }
 
-void Sampler::GUI() {
-	ImGui::Text("Sampler");
-}
+void Sampler::GUI() {}

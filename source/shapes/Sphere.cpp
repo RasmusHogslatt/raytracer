@@ -127,7 +127,6 @@ glm::vec3 Sphere::getPointOnHemisphere(float u, float v) const
 
 void Sphere::GUI()
 {
-	ImGui::Text("Shape: SPHERE");
 	ImGui::SliderFloat3("Sphere position", &position_.x, -10.0f, 10.0f);
 	if (ImGui::SliderFloat("Radius", &radius_, 0.1f, 10.0f)) {
 		area_ = getArea();

@@ -21,8 +21,5 @@ Primitive::~Primitive() {}
 
 void Primitive::GUI()
 {
-	ImGui::NewLine();
-	ImGui::Text("PRIMITIVES");
 	shape_->GUI();
-	//material_->GUI();
 }

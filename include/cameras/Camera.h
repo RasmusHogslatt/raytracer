@@ -18,7 +18,6 @@ public:
 	glm::vec3 front_;
 	glm::vec3 right_;
 	float yaw_, pitch_;
-	int samples_;
 	float aspectRatio_;
 	float fov_;
 };

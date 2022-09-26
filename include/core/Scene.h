@@ -10,9 +10,10 @@
 
 /// <summary>
 /// Primitives:
-/// 0 = sphere
-/// 1 = triangle
-/// 
+/// 0 = Sphere
+/// 1 = Triangle
+/// 2 = Rectangle
+/// 3 = Tetrahedron
 /// Lights:
 /// 0 = Sphere light
 /// 1 = Area light
@@ -42,5 +43,6 @@ public:
 	Primitive dummySphere_;
 	Primitive dummyTriangle_;
 	Primitive dummyRectangle_;
+	Primitive dummyTetrahedron_;
 	Light dummySphereLight_;
 };
