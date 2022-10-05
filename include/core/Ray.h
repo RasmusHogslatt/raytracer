@@ -14,8 +14,11 @@ public:
 	glm::vec3 direction_;
 	glm::vec3 end_;
 	glm::vec3 importance_;
+	glm::vec3 radiance_;
 	glm::vec3 intersectionNormal_;
+	glm::vec3 orthoToNormal_;
 	Material* material_;
+	int lightIndex_;
 	bool inside_;
 	std::shared_ptr<Ray> parent_;
 	std::shared_ptr<Ray> child_;

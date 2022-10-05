@@ -29,7 +29,7 @@ void Light::GUI()
 	shape_->GUI();
 }
 
-float Light::getRadiosity()
+float Light::getRadiosity(int samples)
 {
 	return 0.0f;
 }

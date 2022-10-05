@@ -39,6 +39,7 @@ set(HEADER_FILES
     include/materials/Material.h
     include/lights/Light.h
     include/lights/SphereLight.h
+    include/lights/RectangleLight.h
     include/integrators/Integrator.h
     include/integrators/MonteCarloIntegrator.h
 )
@@ -65,6 +66,7 @@ set(SOURCE_FILES
     source/materials/Material.cpp
     source/lights/Light.cpp
     source/lights/SphereLight.cpp
+    source/lights/RectangleLight.cpp
     source/integrators/Integrator.cpp
     source/integrators/MonteCarloIntegrator.cpp
 )

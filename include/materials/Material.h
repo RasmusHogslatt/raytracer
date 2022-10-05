@@ -10,6 +10,7 @@ public:
 	Material(const Material& old);
 	virtual Material* clone() const = 0;
 	virtual void GUI() = 0;
+	virtual float getFr() = 0;
 public:
 	glm::vec3 color_;
 	float reflectance_;
@@ -27,6 +28,7 @@ public:
 	Lambertian(const Lambertian& old);
 	Lambertian* clone() const;
 	void GUI();
+	float getFr();
 };
 
 // ID = 1
@@ -37,6 +39,7 @@ public:
 	Mirror(const Mirror& old);
 	Mirror* clone() const;
 	void GUI();
+	float getFr();
 };
 
 // ID = 2
@@ -47,4 +50,5 @@ public:
 	Glass(const Glass& old);
 	Glass* clone() const;
 	void GUI();
+	float getFr();
 };

@@ -15,13 +15,12 @@ public:
 	int getNearestIntersectionIndex(Ray& r, float& depth, int type = 0);
 
 	// Returns direction inside hemisphere. Takes two random floats [0, 1]
-	glm::vec3 uniformSampleHemisphere(const Ray& ray, const float& r1, const float& r2);
+	glm::vec3 uniformSampleHemisphere(const Ray& ray, const float& phi, const float& theta);
 
-	glm::vec3 cosineWeightedSampleHemisphere(const Ray& ray, const float& r1, const float& r2);
+	glm::vec3 cosineWeightedSampleHemisphere(const Ray& ray, const float& phi, const float& theta);
 
 	glm::vec3 directLight(Ray& ray);
-	glm::vec3 indirectLight(Ray& ray);
-	glm::vec3 traverseList(std::shared_ptr<Ray> r);
+	void indirectRay(Ray& ray);
 	bool russianRoulette(float probability);
 public:
 	int samplerPerPixel_;

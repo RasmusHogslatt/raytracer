@@ -10,7 +10,7 @@ public:
 	virtual ~Light();
 	void GUI();
 	// Returns point on visible part of area light
-	float getRadiosity();
+	float getRadiosity(int samples);
 public:
 	Shape* shape_;
 	float flux_;

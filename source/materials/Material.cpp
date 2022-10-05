@@ -3,7 +3,7 @@
 #include <materials/Material.h>
 #include <imgui.h>
 
-Material::Material() : color_{ glm::vec3(1.0, 0.0, 0.0) }, reflectance_{ 0.0f }, transmittance_{ 0.0f }, ior_{ 1.33f }, name_{""}, id_{-1}
+Material::Material() : color_{ glm::vec3(1.0, 0.0, 0.0) }, reflectance_{ 1.0f }, transmittance_{ 0.0f }, ior_{ 1.33f }, name_{""}, id_{0}
 {
 }
 
@@ -32,6 +32,7 @@ Material::Material(const Material& old)
 Lambertian::Lambertian() : Material()
 {
 	name_ = "Lambertian";
+	reflectance_ = 1.0f;
 	transmittance_ = 0.0f;
 	id_ = 0;
 }
@@ -60,6 +61,11 @@ void Lambertian::GUI()
 	ImGui::Text(name_.c_str());
 	ImGui::ColorEdit3("Color", &color_.x);
 	ImGui::SliderFloat("Reflectance", &reflectance_, 0.0f, 1.0f);
+}
+
+float Lambertian::getFr()
+{
+	return reflectance_ / 3.14f;
 }
 
 Mirror::Mirror() : Material()
@@ -94,6 +100,11 @@ void Mirror::GUI()
 	ImGui::Text(name_.c_str());
 }
 
+float Mirror::getFr()
+{
+	return reflectance_;
+}
+
 Glass::Glass() : Material()
 {
 	name_ = "Glass";
@@ -126,4 +137,9 @@ void Glass::GUI()
 {
 	ImGui::Text(name_.c_str());
 	ImGui::SliderFloat("IOR", &ior_, 0.1f, 4.33f);
+}
+
+float Glass::getFr()
+{
+	return reflectance_;
 }

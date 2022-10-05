@@ -45,4 +45,5 @@ public:
 	Primitive dummyRectangle_;
 	Primitive dummyTetrahedron_;
 	Light dummySphereLight_;
+	Light dummyRectangleLight_;
 };

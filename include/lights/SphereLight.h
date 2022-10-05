@@ -9,6 +9,6 @@ public:
 	SphereLight(const SphereLight& old);
 	~SphereLight();
 	void GUI();
-	float getRadiosity();
+	float getRadiosity(int samples);
 public:
 };

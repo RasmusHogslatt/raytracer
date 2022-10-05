@@ -26,7 +26,7 @@ void SphereLight::GUI()
 	shape_->GUI();
 }
 
-float SphereLight::getRadiosity()
+float SphereLight::getRadiosity(int samples)
 {
-	return flux_ / shape_->getArea();
+	return flux_ / (shape_->getArea() / samples);
 }
