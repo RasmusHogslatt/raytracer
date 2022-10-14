@@ -28,13 +28,13 @@ void MonteCarloIntegrator::Integrate(Texture& renderTexture) {
 	for (int y = 0; y < resolution.y; ++y) {
 		for (int x = 0; x < resolution.x; ++x) {
 			glm::vec3 pixel = glm::vec3(0);
-			progress_++;
-			//ImGui::ProgressBar(static_cast<float>(progress_) / static_cast<float>(1920 * 1080), ImVec2(0, 0), "s");
 			color = glm::vec3(0);
 			for (currentSample = 0; currentSample < samplerPerPixel_; ++currentSample) {
 				samplePosition = scene_->samplers_[scene_->activeSampler_]->getSamplePosition(x, y, *scene_->cameras_[scene_->activeCamera_], currentSample);
 				ray = scene_->cameras_[scene_->activeCamera_]->generateRay(samplePosition);
 				ray.parent_ = nullptr;
+				Ray pr = Ray();
+				ray.parent_ = std::make_shared<Ray>(pr);
 				color += traceRay(ray);
 			}
 			color /= static_cast<float>(samplerPerPixel_);
@@ -48,6 +48,7 @@ void MonteCarloIntegrator::Integrate(Texture& renderTexture) {
 // For each ray calculate importance, then return color scaled by incoming rays importance
 glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 	// Get closest intersected object
+	glm::vec3 color = glm::vec3(0);
 	float objectDistance = std::numeric_limits<float>::max();
 	int objectIndex = getNearestIntersectionIndex(r, objectDistance, 0);
 
@@ -59,7 +60,7 @@ glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 	if (lightIndex != -1 && lightDistance < objectDistance) {
 		r.radiance_ += glm::vec3(scene_->lights_[lightIndex]->flux_ / scene_->lights_[lightIndex]->shape_->getArea());
 		r.lightIndex_ = lightIndex;
-		//return r.radiance_;
+		return glm::vec3(1);
 	}
 	// Final hit is lambertian
 	else {
@@ -85,17 +86,37 @@ glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 
 			switch (r.material_->id_) {
 			case 0: {
-				if (true) {
-					directLight(r);
-					//float u1 = distribution(generator);
-					//float u2 = distribution(generator);
-					//float phi = 2.0f * 3.14f * u1 / scene_->primitives_[objectIndex]->material_->reflectance_;
-					//if (phi < 2.0f * 3.14f) {
-					//	float theta = acos(sqrt(u2));
-					//	//e1 should be orthogonal to intersectionnormal --> set in all intersections. rotate vector e1 phi radiance around normal...
-					//	glm::vec3 newdir = glm::normalize(glm::rotate(r.e1, phi, r.intersectionNormal_))
-					//}
-					indirectRay(r); // Russian roulette --> Continue or not (calls traceRay) + sets importance for next ray
+				if (!r.inside_) {
+
+					color += directLight(r);
+
+					float pdf = 1.0f;
+					glm::vec3 sampleDirection = glm::vec3(0);
+
+					float phi = distribution(generator);
+					float theta = distribution(generator);
+					if (russianRoulette(phi)) {
+						switch (indirectSampleOption_) {
+						case 0:
+							pdf = 1.0f / (2.0f * 3.14f);
+
+							sampleDirection = uniformSampleHemisphere(r, phi, theta);
+							break;
+						case 1:
+							/*phi *= 2.0f * 3.14f;
+							theta = acos(sqrt(theta));*/
+							sampleDirection = cosineWeightedSampleHemisphere(r, phi, theta);
+							pdf = glm::dot(r.intersectionNormal_, sampleDirection) / 3.14f;
+							break;
+						}
+						Ray indirectRay = Ray(r.end_, sampleDirection, std::make_shared<Ray>(r));
+						r.child_ = std::make_shared<Ray>(indirectRay);
+
+						// Trace indirect ray and adjust for incoming angle and propbability of specific ray
+						indirectRay.importance_ = r.importance_ * pdf; // eq. 5 w2 = pi / pdf * fr * w1
+
+						color += traceRay(indirectRay) * indirectRay.importance_ / r.importance_; // -> 0 elementwise
+					}
 				}
 				break;
 			}
@@ -105,7 +126,8 @@ glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 				Ray reflectedRay(intersectionOffset, direction, std::make_shared<Ray>(r));
 				//reflectedRay.radiance_ = r.radiance_;
 				reflectedRay.importance_ = r.importance_;
-				r.radiance_ += traceRay(reflectedRay) * reflectedRay.importance_ / r.importance_;
+				color += traceRay(reflectedRay);
+
 				break;
 			}
 			case 2: {
@@ -117,9 +139,7 @@ glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 					sign = -1.0f;
 					std::swap(n1, n2);
 				}
-				else {
 
-				}
 				glm::vec3 reflectedOrigin = r.end_ + r.intersectionNormal_ * bias_ * sign;
 				glm::vec3 refractedOrigin = r.end_ - r.intersectionNormal_ * bias_ * sign;
 
@@ -161,13 +181,13 @@ glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 						reflectedRay.inside_ = false;
 					}
 				}
-				r.radiance_ += traceRay(reflectedRay) * reflectedRay.importance_ / r.importance_;
+				color += traceRay(reflectedRay);
 				break;
 			}
 			}
 		}
 	}
-	return glm::clamp(r.radiance_, 0.0f, 1.0f);
+	return glm::clamp(color, 0.0f, 1.0f);
 }
 
 int MonteCarloIntegrator::getNearestIntersectionIndex(Ray& r, float& depth, int type)
@@ -232,77 +252,40 @@ glm::vec3 MonteCarloIntegrator::cosineWeightedSampleHemisphere(const Ray& ray, c
 // Calculates direct lighting given normal at intersected object and ray which holds material properties and intersectionPoint = ray.end_
 glm::vec3 MonteCarloIntegrator::directLight(Ray& ray)
 {
-	glm::vec3 result = glm::vec3(0);
-	for (int i = 0; i < scene_->lights_.size(); ++i) {
-		glm::vec3 color = glm::vec3(0);
-		Light* light = scene_->lights_[i];
-		for (int lightSamples = 0; lightSamples < lightSamples_; ++lightSamples) {
-
-			// Get random point on light
-			float r1 = distribution(generator);
-			float r2 = distribution(generator);
-			glm::vec3 pointOnLightHemisphere = light->shape_->getPointOnSurface(glm::normalize(ray.end_ - light->shape_->getPosition()), r1, r2);
-
-			glm::vec3 lightToSurface = pointOnLightHemisphere - ray.end_;
-			Ray lightRay = Ray(ray.end_, glm::normalize(lightToSurface));
-			float lightToObjectDistance = glm::distance(pointOnLightHemisphere, lightRay.origin_);
-
-			float x = 0.0f;
-			float visibility = 1.0f;
-			if (light->shape_->intersect(lightRay, x)) {
-				// In shadow?
-				float lightDistance = glm::distance(pointOnLightHemisphere, lightRay.origin_);
-				if (getNearestIntersectionIndex(lightRay, x, 0) != -1) {
-					if (x > lightDistance) {
-						visibility = 1.0f;
-					}
-					else {
-						visibility = 0.0f;
-					}
-				}
-				float cosXi = glm::dot(ray.intersectionNormal_, pointOnLightHemisphere - ray.end_);
-				float cosYi = glm::dot(-light->shape_->getNormal(pointOnLightHemisphere), lightToSurface);
-				float radiosity = light->flux_ / (light->shape_->getArea() / lightSamples_);
-				color += ray.material_->color_ * ray.material_->getFr() * visibility * radiosity * cosXi * cosYi / (lightToObjectDistance * lightToObjectDistance);
-				//color /= static_cast<float>(lightSamples_);
-			}
-		}
-		result += color;
-	}
-	ray.radiance_ += result;
-	return result;
-}
-
-void MonteCarloIntegrator::indirectRay(Ray& ray)
-{
 	glm::vec3 color = glm::vec3(0);
-	float pdf = 1.0f;
-	glm::vec3 sampleDirection = glm::vec3(0);
+	for (int i = 0; i < scene_->lights_.size(); ++i) {
+		Light* light = scene_->lights_[i];
 
-	float phi = distribution(generator) * 2.0f * 3.14f / ray.material_->reflectance_;
-	if (russianRoulette(phi)) {
+		// Get random point on light
+		float r1 = distribution(generator);
+		float r2 = distribution(generator);
+		glm::vec3 pointOnLightHemisphere = light->shape_->getPointOnSurface(glm::normalize(ray.end_ - light->shape_->getPosition()), r1, r2);
+		glm::vec3 lightToSurface = pointOnLightHemisphere - ray.end_;
 
-		float theta = acos(sqrt(distribution(generator)));
-		switch (indirectSampleOption_) {
-		case 0:
-			pdf = 1.0f / (2.0f * 3.14f);
-			phi = distribution(generator);
-			theta = distribution(generator);
-			sampleDirection = uniformSampleHemisphere(ray, phi, theta);
-			break;
-		case 1:
-			pdf = pdf = glm::dot(ray.intersectionNormal_, ray.direction_) / 3.14f;
-			sampleDirection = cosineWeightedSampleHemisphere(ray, phi, theta);
-			break;
+		Ray lightRay = Ray(ray.end_, glm::normalize(lightToSurface));
+		float lightToObjectDistance = glm::distance(pointOnLightHemisphere, lightRay.origin_);
+
+		float x = 0.0f;
+		float visibility = 1.0f;
+		if (light->shape_->intersect(lightRay, x)) {
+			// In shadow?
+			float lightDistance = glm::distance(pointOnLightHemisphere, lightRay.origin_);
+			if (getNearestIntersectionIndex(lightRay, x, 0) != -1) {
+				if (x > lightDistance) {
+					visibility = 1.0f;
+				}
+				else {
+					visibility = 0.0f;
+				}
+			}
+
+			float cosXi = glm::dot(ray.intersectionNormal_, pointOnLightHemisphere - ray.end_);
+			float cosYi = glm::dot(-light->shape_->getNormal(pointOnLightHemisphere), lightToSurface);
+			float radiosity = light->flux_ / light->shape_->getArea();
+			color += ray.material_->color_ * ray.material_->getFr() * visibility * radiosity * cosXi * cosYi / (lightToObjectDistance * lightToObjectDistance);
 		}
-		Ray indirectRay = Ray(ray.end_, sampleDirection, std::make_shared<Ray>(ray));
-		ray.child_ = std::make_shared<Ray>(indirectRay);
-
-		// Trace indirect ray and adjust for incoming angle and propbability of specific ray
-		indirectRay.importance_ = ray.material_->getFr() * ray.importance_ * 3.14f * ray.material_->color_ / (ray.material_->reflectance_); // eq. 5 w2 = pi / pdf * fr * w1
-
-		ray.radiance_ += traceRay(indirectRay) * indirectRay.importance_ / ray.importance_; // -> 0 elementwise
 	}
+	return color;
 }
 
 bool MonteCarloIntegrator::russianRoulette(float probability)

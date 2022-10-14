@@ -17,6 +17,7 @@ Ray PerspectiveCamera::generateRay(const glm::vec2& samplePosition)
 	glm::vec3 rayDirection = glm::normalize(planeSample - position_);
 
 	Ray ray(position_, rayDirection);
+	ray.importance_ = glm::vec3(1);
 	return ray;
 }
 

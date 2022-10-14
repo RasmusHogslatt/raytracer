@@ -22,7 +22,6 @@ public:
 	glm::vec3 cosineWeightedSampleHemisphere(const Ray& ray, const float& phi, const float& theta);
 
 	glm::vec3 directLight(Ray& ray);
-	void indirectRay(Ray& ray);
 	bool russianRoulette(float probability);
 public:
 	int samplerPerPixel_;
