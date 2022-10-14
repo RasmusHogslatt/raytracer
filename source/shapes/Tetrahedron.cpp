@@ -45,7 +45,7 @@ glm::vec3 Tetrahedron::getPosition()
 	return glm::vec3();
 }
 
-glm::vec3 Tetrahedron::getNormal(const glm::vec3& intersectionPoint)
+glm::vec3 Tetrahedron::getNormal(const glm::vec3&)
 {
 	if (intersectedIndex_ != -1) {
 		return triangles_[intersectedIndex_]->getNormal(glm::vec3(0));
@@ -62,7 +62,7 @@ void Tetrahedron::GUI()
 {
 }
 
-glm::vec3 Tetrahedron::getPointOnSurface(const glm::vec3& normal, float u, float v)
+glm::vec3 Tetrahedron::getPointOnSurface(const glm::vec3&, float, float)
 {
 	return glm::vec3(0);
 }

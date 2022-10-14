@@ -4,6 +4,6 @@
 
 CenterSampler::CenterSampler() : Sampler() {}
 
-glm::vec2 CenterSampler::getSamplePosition(int x, int y, Camera& c, int currentSample) {
+glm::vec2 CenterSampler::getSamplePosition(int x, int y, Camera& c, int) {
 	return getCenterSample(x, y, c);
 }

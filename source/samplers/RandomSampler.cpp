@@ -8,7 +8,7 @@ std::uniform_real_distribution<float> distr(-1, 1);
 
 RandomSampler::RandomSampler() : Sampler() {}
 
-glm::vec2 RandomSampler::getSamplePosition(int x, int y, Camera& c, int currentSample)
+glm::vec2 RandomSampler::getSamplePosition(int x, int y, Camera& c, int)
 {
 	glm::vec2 center = getCenterSample(x, y, c);
 	float random1 = distr(gen);

@@ -10,7 +10,7 @@
 #include <cmath>
 #include <glm/gtx/norm.hpp>
 
-
+#include <thread>
 
 std::default_random_engine generator;
 std::uniform_real_distribution<float> distribution(0, 1);
@@ -27,7 +27,7 @@ void MonteCarloIntegrator::Integrate(Texture& renderTexture) {
 
 	for (int y = 0; y < resolution.y; ++y) {
 		for (int x = 0; x < resolution.x; ++x) {
-
+			glm::vec3 pixel = glm::vec3(0);
 			progress_++;
 			//ImGui::ProgressBar(static_cast<float>(progress_) / static_cast<float>(1920 * 1080), ImVec2(0, 0), "s");
 			color = glm::vec3(0);
@@ -168,7 +168,6 @@ glm::vec3 MonteCarloIntegrator::traceRay(Ray& r) {
 		}
 	}
 	return glm::clamp(r.radiance_, 0.0f, 1.0f);
-
 }
 
 int MonteCarloIntegrator::getNearestIntersectionIndex(Ray& r, float& depth, int type)

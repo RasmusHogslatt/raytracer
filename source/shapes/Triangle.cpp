@@ -85,7 +85,7 @@ glm::vec3 Triangle::getPosition()
 	return (vertices_[0] + vertices_[1] + vertices_[2]) / 3.0f;
 }
 
-glm::vec3 Triangle::getNormal(const glm::vec3& intersectionPoint)
+glm::vec3 Triangle::getNormal(const glm::vec3&)
 {
 	glm::vec3 edge1 = glm::normalize(vertices_[0] - vertices_[1]);
 	glm::vec3 edge2 = glm::normalize(vertices_[2] - vertices_[1]);
@@ -93,7 +93,7 @@ glm::vec3 Triangle::getNormal(const glm::vec3& intersectionPoint)
 	return normal_;
 }
 
-glm::vec3 Triangle::getPointOnSurface(const glm::vec3& normal, float u, float v)
+glm::vec3 Triangle::getPointOnSurface(const glm::vec3&, float u, float v)
 {
 	if (u + v > 1.0f) {
 		u = 1.0f - u;

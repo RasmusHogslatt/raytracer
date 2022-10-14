@@ -73,7 +73,7 @@ glm::vec3 Rectangle::getPosition()
 	return (vertices_[0] + vertices_[1]) / 2.0f + (vertices_[1] + vertices_[2]) / 2.0f;
 }
 
-glm::vec3 Rectangle::getNormal(const glm::vec3& intersectionPoint)
+glm::vec3 Rectangle::getNormal(const glm::vec3&)
 {
 	glm::vec3 edge1 = glm::normalize(vertices_[0] - vertices_[1]);
 	glm::vec3 edge2 = glm::normalize(vertices_[2] - vertices_[1]);
@@ -88,7 +88,7 @@ float Rectangle::getArea()
 	return edge1 * edge2;
 }
 
-glm::vec3 Rectangle::getPointOnSurface(const glm::vec3& normal, float u, float v)
+glm::vec3 Rectangle::getPointOnSurface(const glm::vec3&, float u, float v)
 {
 	glm::vec3 edge1 = glm::normalize(vertices_[0] - vertices_[1]);
 	glm::vec3 edge2 = glm::normalize(vertices_[2] - vertices_[1]);

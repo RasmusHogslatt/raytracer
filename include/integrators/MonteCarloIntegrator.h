@@ -3,6 +3,8 @@
 #include <integrators/Integrator.h>
 #include <glm/gtx/rotate_vector.hpp>
 
+#include <future>
+
 class MonteCarloIntegrator : public Integrator {
 public:
 	MonteCarloIntegrator(Scene* scene);
