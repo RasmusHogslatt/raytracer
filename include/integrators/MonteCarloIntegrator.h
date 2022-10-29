@@ -24,7 +24,6 @@ public:
 	glm::vec3 directLight(Ray& ray);
 	bool russianRoulette(float probability);
 public:
-	int samplerPerPixel_;
 	float bias_;
 	int lightSamples_;
 	int progress_;

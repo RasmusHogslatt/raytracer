@@ -50,4 +50,5 @@ private:
 
 	std::vector<Integrator*> integrators_;
 	int activeIntegrator_;
+	std::string renderTime_;
 };

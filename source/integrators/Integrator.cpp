@@ -3,7 +3,7 @@
 #include <integrators/Integrator.h>
 #include <imgui.h>
 
-Integrator::Integrator(Scene* scene) : scene_{ scene }, globalIOR_{ 1.0f } {}
+Integrator::Integrator(Scene* scene) : scene_{ scene }, globalIOR_{ 1.0f }, samplerPerPixel_{1} {}
 
 void Integrator::GUI()
 {
