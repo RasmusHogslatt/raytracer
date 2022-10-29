@@ -19,4 +19,5 @@ public:
 public:
 	Scene* scene_;
 	float globalIOR_;
+	int samplerPerPixel_;
 };

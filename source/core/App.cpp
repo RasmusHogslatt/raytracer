@@ -9,7 +9,8 @@
 #include <cameras/OrthographicCamera.h>
 #include <samplers/RandomSampler.h>
 #include <lights/Light.h>
-
+#include <chrono>
+#include <string>
 
 void App::GUI()
 {
@@ -33,7 +34,8 @@ void App::GUIMenu() {
 		}
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("Export PNG")) {
-				renderTexture_.exportPNG("Output", 4);
+				std::string file = std::to_string(integrators_[activeIntegrator_]->samplerPerPixel_) + "_" + renderTime_;
+				renderTexture_.exportPNG(file, 4);
 			}
 			ImGui::EndMenu();
 		}
@@ -54,8 +56,12 @@ void App::GUIControlPanel() {
 
 void App::GUIRenderTexture() {
 	if (renderStart_) {
+		auto start = std::chrono::steady_clock::now();
 		integrators_[activeIntegrator_]->Integrate(renderTexture_);
 		renderStart_ = false;
+		auto end = std::chrono::steady_clock::now();
+		std::chrono::duration<float> elapsedSeconds = end - start;
+		renderTime_ = std::to_string(elapsedSeconds.count());
 	}
 	ImVec2 topleft = ImVec2(620, 25);
 	ImVec2 bottomright = ImVec2(topleft.x + renderTexture_.getWidth(), topleft.y + renderTexture_.getHeight());
@@ -88,7 +94,7 @@ static void glfw_error_callback(int error, const char* description) {
 	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-App::App(int width, int height) : renderStart_{ false }, renderResolution_{ 1920, 1080 }, glfwWindow_{ nullptr }, appResolution_{ glm::ivec2(width, height) }, activeIntegrator_{ 0 } {
+App::App(int width, int height) : renderStart_{ false }, renderResolution_{ 1920, 1080 }, glfwWindow_{ nullptr }, appResolution_{ glm::ivec2(width, height) }, activeIntegrator_{ 0 }, renderTime_{""} {
 	initGLFWandIMGUI();
 
 	renderTexture_.createTexture(renderResolution_.x, renderResolution_.y);

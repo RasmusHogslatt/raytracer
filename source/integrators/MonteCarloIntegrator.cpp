@@ -10,12 +10,10 @@
 #include <cmath>
 #include <glm/gtx/norm.hpp>
 
-#include <thread>
-
 std::default_random_engine generator;
 std::uniform_real_distribution<float> distribution(0, 1);
 
-MonteCarloIntegrator::MonteCarloIntegrator(Scene* scene) : Integrator(scene), samplerPerPixel_{ 1 }, bias_{ 0.0001f }, lightSamples_{ 1 }, progress_{ 0 }, indirectSampleOption_{ 1 } {}
+MonteCarloIntegrator::MonteCarloIntegrator(Scene* scene) : Integrator(scene), bias_{ 0.0001f }, lightSamples_{ 1 }, progress_{ 0 }, indirectSampleOption_{ 1 } {}
 
 void MonteCarloIntegrator::Integrate(Texture& renderTexture) {
 	glm::ivec2 resolution = scene_->cameras_[scene_->activeCamera_]->resolution_;

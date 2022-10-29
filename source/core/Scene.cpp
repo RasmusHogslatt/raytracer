@@ -243,8 +243,8 @@ void Scene::loadRoom()
 	Primitive tetra2;
 	glm::vec3 translate2 = glm::vec3(-4, -0, -5);
 	tetra2.shape_ = new Tetrahedron(glm::vec3(sqrt(8.0f / 9.0f), -1.0f / 3.0f, 0.0f) + translate2, glm::vec3(-sqrt(2.0f / 9.0f), -1.f / 3.f, sqrt(2.f / 3.f)) + translate2, glm::vec3(-sqrt(2.f / 9.f), -1.f / 3.f, -sqrt(2.f / 3.f)) + translate2, glm::vec3(0.0f, 1.0f, 0.0f) + translate2);
-	tetra2.material_ = new Glass();
-	//primitives_.push_back(tetra2.clone());
+	tetra2.material_ = new Lambertian();
+	primitives_.push_back(tetra2.clone());
 
 	// Lights
 	Light sl1 = Light();
