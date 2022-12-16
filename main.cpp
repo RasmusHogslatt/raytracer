@@ -1,11 +1,10 @@
 #pragma once
 
-#include <core/App.h>
 #include <iostream>
-
+#include <ResourcePath.h>
 int main()
 {
-	App app;
-	app.loop();
+	std::cout << RESOURCE_PATH;
 	return 0;
+
 }
