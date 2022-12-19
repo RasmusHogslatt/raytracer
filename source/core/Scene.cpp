@@ -11,6 +11,7 @@
 #include <shapes/Triangle.h>
 #include <shapes/Rectangle.h>
 #include <shapes/Tetrahedron.h>
+#include <ResourcePath.h>
 
 Scene::Scene() : activeCamera_{ 0 }, activeSampler_{ 1 }, activePrimitive_{ 0 }, activeLight_{ 0 }, dummySphere_{ Primitive() }, dummyTriangle_{ Primitive() }, dummyRectangle_{ Primitive() }, dummyTetrahedron_{ Primitive() }, dummySphereLight_{ SphereLight() }, dummyRectangleLight_{ RectangleLight() }, activeMaterial_{ 0 } {
 	materials_.push_back(new Lambertian());
